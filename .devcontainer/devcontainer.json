@@ -6,10 +6,9 @@
 	"image": "mcr.microsoft.com/devcontainers/java",
 	"features": {
 		"ghcr.io/devcontainers/features/java:1": {
-			"installGradle": true,
+			"installMaven": true,
 			"version": "latest",
 			"jdkDistro": "tem",
-			"gradleVersion": "latest",
 			"mavenVersion": "latest"
 		}
 	},
