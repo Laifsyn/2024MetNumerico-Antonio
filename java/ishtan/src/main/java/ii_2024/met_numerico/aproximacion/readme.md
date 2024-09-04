@@ -1,12 +1,12 @@
 
 **Tabla de Contenido**
 
-
+V<sup>⎓</sup>
 
 # Información del proyecto
 
-> Tema: Aproximación de una función
-> Fecha de entrega: 2024/09/30
+    Tema: Aproximación de una función
+    Fecha de entrega: 2024/09/30
 
 
 

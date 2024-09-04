@@ -7,10 +7,10 @@
 
 # Proyectos
 
-> Facilitador: Prof. Andy
-> Nombre: Antonio Ng
-> Periodo: 2024
-> Semestre: II
+    Facilitador: Prof. Andy
+    Nombre: Antonio Ng
+    Periodo: 2024
+    Semestre: II
 
 
 ***
