@@ -81,7 +81,7 @@ El proyecto debe entregarse en base a la plantilla de proyectos.
 ## Muestra 1
 
 Funciones: Bisección, Regla Falsa y Secante respectivamente 
-
+****
 ![Ejemplos de aproximaciones](Muestra1.png)
 
 ************************************
