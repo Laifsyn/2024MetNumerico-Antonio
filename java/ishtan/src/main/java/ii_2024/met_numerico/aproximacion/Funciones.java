@@ -10,6 +10,12 @@ import ii_2024.met_numerico.DrawTable;
 
 public interface Funciones {
 
+    /**
+     * Método de la regla falsa para encontrar una raíz de una función
+     * 
+     * @param x0 : Valor inferior en el intervalo
+     * @param x1 : Valor superior en el intervalo
+     */
     public static ApproximationResult regla_falsa(FOfX f, double x0, double x1, double percent_threshold) {
         var tabla = new DrawTable();
         var deci_5 = FOfX.rounder(5); // Redondear a 5 decimales
@@ -53,16 +59,19 @@ public interface Funciones {
         return new ApproximationResult(tabla, old_c);
     }
 
-    public static ApproximationResult secante(FOfX f, double x_i_menos_uno, double x_i, double percent_threshold) {
+    /**
+     * Método de la secante para encontrar una raíz de una
+     * 
+     * @param x_0 : Valor inferior en el intervalo
+     * @param x_1 : Valor superior en el intervalo
+     */
+    public static ApproximationResult secante(FOfX f, double x_0, double x_1, double percent_threshold) {
         var tabla = new DrawTable();
 
         // Renombrar variables a un nombre más significativo para el contexto
-        double old_x = x_i_menos_uno;
-        double x = x_i;
+        double old_x = x_0;
+        double x = x_1;
 
-        /**
-         * x_{i+1}=x_i-\frac{f(x_i)(x_{i-1}-x_i)}{f(x_{i-1})-f(x_i)}
-         */
         // Insertar encabezados de la tabla.
         tabla.insertar_fila(new String[] { "i", "x_{i}", "f(x_{i-1})", "f(x_i)", "x_{i+1}", "error %" });
         tabla.insertar_fila(
@@ -98,12 +107,10 @@ public interface Funciones {
     }
 
     /**
+     * Método de la bisección para encontrar una raíz de una función
      * 
-     * @param f                 : función a evaluar
-     * @param x0                : rango 2
-     * @param x1                : rango 1
-     * @param percent_threshold : en porcentaje
-     * @return
+     * @param x0 : Valor inferior en el intervalo
+     * @param x1 : Valor superior en el intervalo
      */
     public static Optional<ApproximationResult> biseccion(FOfX f, double x0, double x1, double percent_threshold) {
         var tabla = new DrawTable();

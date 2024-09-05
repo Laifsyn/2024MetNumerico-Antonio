@@ -8,6 +8,8 @@
     - [Implementación en Python:](#implementación-en-python)
     - [Documentación:](#documentación)
     - [Criterios de Evaluación:](#criterios-de-evaluación)
+- [Muestra del proyecto.](#muestra-del-proyecto)
+  - [Muestra 1](#muestra-1)
 - [FIN DEL ARCHIVO](#fin-del-archivo)
 
 
@@ -74,6 +76,13 @@ El proyecto debe entregarse en base a la plantilla de proyectos.
 * Calidad y precisión de las gráficas generadas en Python.  20 puntos.
 * Calidad de la documentación y análisis comparativo entre Java y Python. 10 puntos.
 * Uso adecuado de técnicas de programación (estructuras de control, funciones, manejo de errores, etc.). 15 puntos.
+
+# Muestra del proyecto.
+## Muestra 1
+
+Funciones: Bisección, Regla Falsa y Secante respectivamente 
+
+![Ejemplos de aproximaciones](Muestra1.png)
 
 ************************************
 # FIN DEL ARCHIVO
