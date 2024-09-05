@@ -33,7 +33,7 @@ El programa a desarrollar debe resolver el siguiente problema:
 
 Dada la función  
 
-$$f(x)=x^3-6x2+11x-6$$
+$$f(x)=x^3-6x^2+11x-6$$
 
 se requiere determinar una de sus raíces reales en el intervalo [1.5 y 2.5]
 
