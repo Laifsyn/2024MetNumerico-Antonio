@@ -17,7 +17,7 @@
 
 ## Aproximación de un número 
 
-Utilizando métodos como Newton Rhapson, Regla falsa y Biseccion, aproxime la raíz de un número.
+Utilizando métodos como Secante, Regla Falsa y Biseccion, aproxime la raíz de un número.
 
 \[[Ver Más][aproximacion]]
 

@@ -1,7 +1,15 @@
 
 **Tabla de Contenido**
 
-V<sup>⎓</sup>
+- [Información del proyecto](#información-del-proyecto)
+- [Instrucciones de la tarea](#instrucciones-de-la-tarea)
+  - [**Instrucciones:**](#instrucciones)
+    - [Implementación en Java:](#implementación-en-java)
+    - [Implementación en Python:](#implementación-en-python)
+    - [Documentación:](#documentación)
+    - [Criterios de Evaluación:](#criterios-de-evaluación)
+- [FIN DEL ARCHIVO](#fin-del-archivo)
+
 
 # Información del proyecto
 
@@ -68,4 +76,5 @@ El proyecto debe entregarse en base a la plantilla de proyectos.
 * Uso adecuado de técnicas de programación (estructuras de control, funciones, manejo de errores, etc.). 15 puntos.
 
 ************************************
+# FIN DEL ARCHIVO
 ************************************
