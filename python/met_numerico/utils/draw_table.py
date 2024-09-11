@@ -84,9 +84,9 @@ class DibujarTabla:
             self._columnas = len(fila)
         elif len(fila) != self._columnas:
             raise ValueError(
-                "La cantidad de elementos en la fila no es igual a la cantidad de columnas: \
-                Cantidad de filas: {0}, Cantidad de columnas: {1}".format(
-                    len(fila), self._columnas
+                "La cantidad de elementos en la fila no es igual a la cantidad de columnas de la tabla: \
+Columnas Registradas: {0}, Cantidad de elementos que se intentó ingresar: {1}\n{2}".format(
+                    self._columnas, len(fila), str(fila)
                 )
             )
 
