@@ -45,11 +45,9 @@
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": [
-        "java -version",
-        "python --version",
+        "python3 -V",
         "pip install -r requirements.txt"
     ],
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
-	"dockerFile": "Dockerfile"
 }
