@@ -45,12 +45,7 @@ public interface Funciones {
             double f_c = deci_5.eval(f.eval(c));
             double error_percent = error.eval(old_c, c);
 
-            // Actualizar los valores de a o b dependiendo del signo de f(a) * f(c)
-            if (f_a * f_c < 0) {
-                b = c;
-            } else if (f_a * f_c > 0) {
-                a = c;
-            } else {
+            if ((f_a * f_c) == 0) {
                 // si es 0, entonces `c` o `a` es la raíz
                 if (f_a == 0) {
                     c = a;
@@ -58,9 +53,18 @@ public interface Funciones {
                 error_percent = 0;
             }
 
+            // Agregamos la fila antes de actualizar las variables para la siguiente
+            // iteración.
             tabla.insertar_fila(new String[] { String.valueOf(a), String.valueOf(b), String.valueOf(f_a),
                     String.valueOf(f_c), String.valueOf(c), String.format("%.2f", f_a * f_c),
                     String.format(FORMAT_ERROR, error_percent) });
+
+            // Actualizar los valores de a o b dependiendo del signo de f(a) * f(c)
+            if (f_a * f_c < 0) {
+                b = c;
+            } else if (f_a * f_c > 0) {
+                a = c;
+            }
 
             // Actualizar la variable para la siguiente iteración
             old_c = c;
