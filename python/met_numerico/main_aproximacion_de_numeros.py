@@ -82,16 +82,8 @@ def regla_falsa(
         error_porcentual = ERROR(c, old_c)
 
         f_c = f(c)
-        if f_a * f_c < 0:
-            b = c
-        elif f_a * f_c > 0:
-            a = c
-        else:
-            # Si f(a) * f(c) == 0, entonces `c` o `a` es la raíz
-            if f_a == 0:
-                c = a
+        if f_a * f_b == 0:
             error_porcentual = 0.0
-        old_c = c
         tabla.insertar_fila(
             [
                 i,
@@ -104,6 +96,17 @@ def regla_falsa(
                 f"{MetodosNumericos.A_FORMATO_ERROR(error_porcentual)}",
             ]
         )
+
+        if f_a * f_c < 0:
+            b = c
+        elif f_a * f_c > 0:
+            a = c
+        else:
+            # Si f(a) * f(c) == 0, entonces `c` o `a` es la raíz
+            if f_a == 0:
+                c = a
+        old_c = c
+        
         if error_porcentual < percent_threshold:
             tabla.separar_cada_fila()
             return (tabla, c)
@@ -233,7 +236,7 @@ def secante(
 
 def main():
     func = lambda x: x**3 - 6 * x**2 + 11 * x - 6
-    intervalos = [1.5, 2.5]
+    intervalos = [1.2, 2.9]
     Regla_falsa = regla_falsa(func, intervalos[0], intervalos[1], 1)
     Biseccion = biseccion(func, intervalos[0], intervalos[1], 1)
     Secante = secante(func, intervalos[0], intervalos[1], 1)
@@ -254,7 +257,7 @@ def main():
         root = raiz
 
     # Dibujar la gráfica para Bisección
-    
+
     # Lista de Estimaciones
     guesses = estimaciones
 
