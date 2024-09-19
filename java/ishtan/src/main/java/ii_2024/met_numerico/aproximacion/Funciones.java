@@ -4,10 +4,6 @@ import java.util.Optional;
 
 import ii_2024.met_numerico.DrawTable;
 
-/**
- * TODO: When the function should error out (return None)
- */
-
 public interface Funciones {
 
     static final String HEADER_TEXT_ERROR = "error %";
