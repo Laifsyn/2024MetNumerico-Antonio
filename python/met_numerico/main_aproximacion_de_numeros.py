@@ -1,5 +1,15 @@
+from math import ceil, floor
 from typing import Callable, Optional, Tuple, TypeVar
 from utils.draw_table import DibujarTabla as Tabla
+import matplotlib.pyplot as plt
+import numpy as np
+
+""" 
+Comandos de Instalación
+python -m pip install -U pip
+python -m pip install -U matplotlib
+pip install PyQt6
+"""
 
 # # importing the required modules
 # import matplotlib.pyplot as plt
@@ -101,7 +111,7 @@ def regla_falsa(
 
 def biseccion(
     f: Callable[[float], float], x0: float, x1: float, percent_threshold: float
-) -> Optional[Tuple[Tabla, float]]:
+) -> Optional[Tuple[Tabla, float, list[float]]]:
     """
     Args:
         f (Callable[[float], float]): Función a evaluar.
@@ -126,13 +136,18 @@ def biseccion(
     # Inicializamos old_c con un valor arbitrario no-constante
     old_c = a
     i = -1
+    estimaciones = []
     # Populamos la tabla con los valores iniciales
     while True:
         i += 1
         c = a_6_decimales((a + b) / 2)
+        estimaciones.append(c)
         f_a = f(a)
         f_c = f(c)
         error_porcentual = ERROR(c, old_c)
+        if f_a * f_c == 0:
+            error_porcentual = 0.0
+
         tabla.insertar_fila(
             [
                 i,
@@ -156,12 +171,12 @@ def biseccion(
 
         if error_porcentual < percent_threshold:
             tabla.separar_cada_fila()
-            return (tabla, c)
+            return (tabla, c, estimaciones)
 
 
 def secante(
     f: Callable[[float], float], x0: float, x1: float, percent_threshold: float
-) -> Tuple[Tabla, float]:
+) -> Tuple[Tabla, float, list[float]]:
     """
     Args:
         f (Callable[[float], float]): Función a evaluar.
@@ -218,13 +233,14 @@ def secante(
 
 def main():
     func = lambda x: x**3 - 6 * x**2 + 11 * x - 6
-    intervalos = [1.2, 2.9]
+    intervalos = [1.5, 2.5]
     Regla_falsa = regla_falsa(func, intervalos[0], intervalos[1], 1)
     Biseccion = biseccion(func, intervalos[0], intervalos[1], 1)
     Secante = secante(func, intervalos[0], intervalos[1], 1)
-
+    root = 0
+    estimaciones = []
     if Biseccion is not None:
-        tabla, raiz = Biseccion
+        tabla, raiz, estimaciones = Biseccion
         print(f"# Método de Bisección\nLa raíz es {raiz}")
         print(tabla)
     if Regla_falsa is not None:
@@ -235,6 +251,62 @@ def main():
         tabla, raiz = Secante
         print(f"# Método de Secante\nLa raíz es {raiz}")
         print(tabla)
+        root = raiz
+
+    # Dibujar la gráfica para Bisección
+    
+    # Lista de Estimaciones
+    guesses = estimaciones
+
+    # Rango de números x
+    x_values = np.linspace(0, 4, 400)
+
+    # Calcular los valores correspondientes en y
+    y_values = func(x_values)
+
+    # Graficar la función
+    plt.plot(x_values, y_values, label="f(x) = x^3 - 6x^2 + 11x - 6")
+
+    # Graficar las estimaciones con un marcador distinto (e.g., Circulos Rojos)
+    guess_y_values = func(np.array(guesses))
+    plt.scatter(guesses, guess_y_values, color="red", marker="o", label="Guesses")
+
+    # Nombrar cada marca de estimación
+    for i, (x, y) in enumerate(zip(guesses, guess_y_values)):
+        plt.text(x, y, f"Guess {i+1}", fontsize=9, ha="right", va="bottom")
+
+    # Zoom in al rango de  x-1 < x < x+1
+    plt.xlim(root - 0.5, root + 0.5)
+    plt.ylim(-1, 1)
+
+    # Agregar etiqueta y título
+    plt.xlabel("x")
+    plt.ylabel("f(x)")
+    plt.title("Gráfica con estimaciones de raíces")
+    # Dibujar una flecha que apunta la raíz
+    plt.annotate(
+        f"Raíz en x = {root}",
+        xy=(root, func(root)),
+        xytext=(root + 0.2, func(root) + 0.5),
+        arrowprops=dict(facecolor="black", shrink=0.05),
+    )
+    # Agregar texto que indica la raíz
+    plt.text(
+        root,
+        func(root) - 0.5,
+        f"Raíz en x = ~{root}",
+        fontsize=9,
+        ha="right",
+        va="bottom",
+    )
+
+    # Agregar recuadros
+    plt.grid(True)
+
+    # Agregar leyenda
+    plt.legend()
+
+    plt.show()
 
 
 main()

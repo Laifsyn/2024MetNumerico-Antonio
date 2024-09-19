@@ -9,7 +9,8 @@
     - [Documentación:](#documentación)
     - [Criterios de Evaluación:](#criterios-de-evaluación)
 - [Muestra del proyecto.](#muestra-del-proyecto)
-  - [Muestra 1](#muestra-1)
+  - [Muestra 1 (Java)](#muestra-1-java)
+  - [Muestra 2 (Python)](#muestra-2-python)
 - [FIN DEL ARCHIVO](#fin-del-archivo)
 
 
@@ -78,11 +79,18 @@ El proyecto debe entregarse en base a la plantilla de proyectos.
 * Uso adecuado de técnicas de programación (estructuras de control, funciones, manejo de errores, etc.). 15 puntos.
 
 # Muestra del proyecto.
-## Muestra 1
+
+## Muestra 1 (Java)
 
 Funciones: Bisección, Regla Falsa y Secante respectivamente 
 ****
-![Ejemplos de aproximaciones](Muestra1.png)
+![Aproximaciones en Java](assets/tabla_resultado_java.png)
+
+## Muestra 2 (Python)
+
+![Aproximaciones en Python](assets/tabla_resultado_python.png)
+
+![Plot1](assets/python_plot_1.png)
 
 ************************************
 # FIN DEL ARCHIVO
