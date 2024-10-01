@@ -1,7 +1,7 @@
 from manim import *
 import numpy as np
 import math as math
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Tuple
 
 
 class MatSup_1(MovingCameraScene):
@@ -165,23 +165,22 @@ class MatSup_1(MovingCameraScene):
             # gipT,
         ]:
             if i is dot_1:
-                self.play(AnimationGroup(Write(dot_1), Write(dot_2)))
+                self.play(LaggedStart(Write(dot_1), Write(dot_2)))
                 continue
             if i is gimT:
                 # Draw the Dot in Half-T
                 self.play(Write(dot_m))
                 # Write f(x - T) and f(x + T)
                 self.play(
-                    AnimationGroup(
+                    LaggedStart(
                         Write(gimT, running_start=0.25, rate_func=linear), Write(gipT)
                     ),
                     run_time=4,
                 )
                 self.play(AnimationGroup(gipT.animate.flip()))
-                self.wait()
                 continue
             self.play(Write(i))
-        self.wait()
+        self.wait(0.75)
         # Voltear gipT de maneral horizontal
         # self.play(gipT.animate.rotate_about_origin(PI, Y_AXIS))
         self.play(gipT.animate.rotate(PI, Y_AXIS, about_point=ax.get_origin()))
@@ -226,63 +225,138 @@ class MatSup_1(MovingCameraScene):
             run_time=2,
         )
         self.bring_to_front(shifted_gip)
-        self.wait()
-        # cleanup
-        to_fade_out = [
-            FadeOut(x)
-            for x in [
-                graph,
-                graph_in_period,
-                shifted_graph,
-                shifted_gip,
-                gip,
-                dot_1,
-                dot_2,
-                dot_m,
-                moving_dot,
-            ]
-        ]
-        self.play(
-            self.camera.frame.animate.set_width(ax.c2p(9, 9) - ax.c2p(-9, -9)),
-        )
+        self.play(Restore(self.camera.frame))
+
+        self.wait(0.5)
         # Vertical Flip
         self.play(shifted_graph.animate.rotate(PI, X_AXIS, about_point=ax.get_origin()))
-        
-        self.play(AnimationGroup(to_fade_out))
-        # test resolution
+        self.wait(0.5)  # 0.5 seconds
 
-        self.wait()
-        custom_mathtex = lambda tex: MathTex(tex, tex_template=tex_template)
-        transformed_eq = MathTex(
-            r"f(t)=\begin{cases}\
-1-t & \text{si } -1\leq t\leq 0 \\\
-1+t& \text{si } 0\leq t\leq 1 \
+        # Borrar elementos innecesarios
+        self.play([FadeOut(x) for x in [dot_1, dot_2, dot_m, shifted_gip, moving_dot]])
+        del dot_1, dot_2, dot_m, shifted_gip, moving_dot
+
+        # Dibujar area bajo las curvas
+        area_1 = ax.get_area(graph, [0, 1], opacity=0.5)
+        area_2 = ax.get_area(shifted_graph, [0, 1], opacity=0.5)
+
+        self.play(AnimationGroup(Write(area_1), Write(area_2)))
+
+        # Shift up and down by 1 unit, and update the equation to match the graph
+        updated_equation = MathTex("f(x) = |x|").move_to(equation)
+
+        # Reduce Areas to fit shifted graph
+        reduced_area_1 = ax.get_area(
+            graph.copy().shift(DOWN), [0, 1], opacity=0.5, color=(PURPLE_E, TEAL_A)
+        )
+        reduced_area_2 = ax.get_area(
+            shifted_graph.copy().shift(UP),
+            [0, 1],
+            opacity=0.5,
+            color=(PURPLE_E, TEAL_A),
+        )
+        # Animate the shift
+        self.play(
+            AnimationGroup(
+                shifted_graph.animate.shift(UP),
+                graph.animate.shift(DOWN),
+                ReplacementTransform(equation, updated_equation),
+                ReplacementTransform(area_1, reduced_area_1),
+                ReplacementTransform(area_2, reduced_area_2),
+            )
+        )
+
+        # Small Cleanup and variable updating
+        [equation, area_1, area_2] = [updated_equation, reduced_area_1, reduced_area_2]
+        del updated_equation, reduced_area_1, reduced_area_2
+        self.wait(0.5)
+
+        # Create a copy to shift by balf period, and vertically flip
+        copy_of_shifted_graph = shifted_graph.copy()
+        ## Shift by half period to left
+        self.play(
+            copy_of_shifted_graph.animate.shift(
+                LEFT * self.half_period
+            ).set_color_by_gradient(PURPLE_D, TEAL_A)
+        )
+        ## Vertical Flip
+        self.play(
+            copy_of_shifted_graph.animate.rotate(
+                PI, X_AXIS, about_point=ax.get_origin()
+            )
+        )
+        ## undraw the object
+        self.play(FadeOut(graph))
+        ## cleanup
+        graph = copy_of_shifted_graph
+        del copy_of_shifted_graph
+
+        self.wait(0.5)
+
+        transformed_eq = (
+            MathTex(
+                r"f(t)=\begin{cases}\
+t & \text{si } -1\leq t\leq 0 \\\
+t& \text{si } 0\leq t\leq 1 \
 \end{cases}; t=[-1,1]"
-        ).move_to(equation.get_center() + UP * 3)
-
-        context_text = Text("La función es 1/4 de onda (Par)")
-        context_text.to_corner(RIGHT + DOWN)
+            )
+            .move_to(equation.get_center() + UP * 3)
+            .set_color_by_gradient(PURPLE_E, TEAL_A)
+        )
+        context_text = Text("La función es 1/4 de onda (Par)", color=TEAL_E)
         context_text.width = 8
-        self.play(Write(context_text))
+        background: List[VMobject] = [ax, graph, area_1, area_2, labels]
         # Transformar la ecuación base para el rango a evaluar
-        self.play(AnimationGroup(ReplacementTransform(equation, transformed_eq)))
-        self.wait()
+        CAMERA_SW_CORNER = [-8.5, -4.0, 0.0]
+        self.play(
+            AnimationGroup(
+                Write(context_text),
+                ReplacementTransform(equation, transformed_eq),
+                FadeOut(shifted_graph),
+                self.camera.frame.animate.set_width(ax.c2p(9, 9) - ax.c2p(-9, -9)),
+                # reducir la opacidad de los elementos del fondo
+                *[x.animate.set_opacity(0.2) for x in background],
+            )
+        )
 
+        self.play(
+            context_text.animate.move_to(
+                CAMERA_SW_CORNER - context_text.get_corner(DOWN + LEFT)
+            )
+        )
+
+        # _Helper function to generate math equations
+        custom_mathtex = lambda tex: (
+            MathTex(tex, tex_template=tex_template, color=GOLD_E)
+        )
         # Write solution
-        solution1 = MathTex(
-            r"A_{n}=\frac{1}{2\cdot T}\cdot{2}\int_{0}^{T/2}{(1+t)\cos(n\omega t)dt}"
-        ).set_color(BLUE_E)
-        self.play(Write(solution1))
 
-        solution2 = MathTex(
+        solution1 = custom_mathtex(
+            r"A_{n}=\frac{1}{2\cdot T}\cdot{2}\int_{0}^{T/2}{(1+t)\cos(n\omega t)dt}"
+        )
+        context = [context_text]
+
+        def with_context(string: str, context: List[Text]) -> TransformMatchingShapes:
+            text = Text(string, color=TEAL_E)
+            text.move_to(CAMERA_SW_CORNER - text.get_corner(DOWN + LEFT))
+            transform = TransformMatchingShapes(context[0], text)
+            context[0] = text
+            return transform
+
+        last_solution = None
+        self.play(
+            AnimationGroup(Write(solution1), with_context("Hello World", context))
+        )
+
+        solution2 = custom_mathtex(
             r"A_{n}=\frac{1}{2}\int_{0}^{T/2}{\left(\cos(n\omega t)+t\cos(n\omega t)\right)dt}"
-        ).set_color(BLUE_E)
+        ).next_to(solution1, DOWN)
         self.wait()
         self.play(
             AnimationGroup(
-                solution1.animate.shift(UP * 2),
                 ReplacementTransform(solution1.copy(), solution2),
                 transformed_eq.animate.shift(UP * 2),
+                with_context("Hola mundo 2", context),
             )
         )
 
