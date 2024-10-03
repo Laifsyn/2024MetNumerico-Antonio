@@ -19,46 +19,23 @@ class TestPy(Scene):
         )
 
     def construct(self):
-        def self_f(x: float) -> Callable[[float], float]:
-            print("Received {:.3f}", x)
-            if x < 0.25:
-                return x
-            elif x < 0.75:
-                return -x + .5
-            else:
-                return x - 1
-
-        f = self.bounded(self_f, self.upper_bound, self.lower_bound)
-        ax = Axes(
-            x_range=[-5.0, 5.0, 0.25],  # Displayed (smallest_x, largest_x, step)
-            y_range=[-3.0, 3.0, 0.25],
-            x_length=20,  # x_length * step
-            y_length=30,
-            x_axis_config={
-                "numbers_to_include": np.arange(-4, 4.01, 1)
-            },  # (Inclusive Lower Bound, Exclusive Upper Bound, Step)
-            y_axis_config={"numbers_to_include": np.arange(-0.5, 1, 0.25)},
-            tips=True,
-        )
-        labels = ax.get_axis_labels(
-            x_label=Tex("$\Delta Q$"), y_label=Tex("T[$^\circ C$]")
-        )
-
-        # x_values = np.array([0, 0.25, 0.5, 0.75, 1])
-        # y_values = np.array([0, 0.25, 0, -0.25, 0])
-        # graph = ax.plot_line_graph(
-        #     x_values=x_values, y_values=y_values, line_color=BLUE
-        # )
-
-        # x_values = np.array([0, 0.25, 0.5, 0.75, 1])
-        # y_values = np.array([0, 0.25, 0, -0.25, 0])
-        # graph = ax.plot_line_graph(
-        #     x_values=x_values, y_values=y_values, line_color=BLUE
-        # )
-
-        graph = ax.plot(f, color=BLUE, x_range=[-3, 3, 0.01], use_smoothing=False)
-
-        self.add(ax, labels, graph)
+        tex_template = TexTemplate()
+        tex_template.add_to_preamble(r"\usepackage{cancel}\usepackage{color}")
+        transformed_eq = MathTex(
+            *[
+                r"a_{n}= \frac{8}{\cancelto{ 2 }{",
+                " T ",
+                r"}}\int^{\cancelto{ 1/2 }{ \frac{T}{4} } }",
+                r"_{0}{\left( t-\frac{1}{2} \right) \cos\left( n ",
+                r"\cancelto{ \frac{2\pi}{2} }{\omega }",
+                r" t \right)}dt",
+            ],
+            tex_template=tex_template,
+        ).set_color(LIGHT_BROWN)
+        transformed_eq[1][0:32].set_color(DARK_BLUE)
+        transformed_eq[2][5:50].set_color(DARK_BLUE)
+        transformed_eq[4][5:50].set_color(DARK_BLUE)
+        self.add(transformed_eq)
 
 
-TestPy().render()
+TestPy().render(preview=True)
