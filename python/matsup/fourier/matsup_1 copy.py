@@ -105,7 +105,7 @@ class MatSup_1(MovingCameraScene):
         config.frame_height = config.frame_width / config.aspect_ratio
         self.camera.frame_height = config.frame_height
         self.camera.frame_width = config.frame_width
-        config.frame_rate = 24
+        config.frame_rate = 20
         self.camera.frame.save_state()
         ax = self.plane
 
@@ -175,12 +175,11 @@ class MatSup_1(MovingCameraScene):
                     LaggedStart(
                         Write(gimT, running_start=0.25, rate_func=linear), Write(gipT)
                     ),
-                    run_time=4,
+                    run_time=3,
                 )
-                self.play(AnimationGroup(gipT.animate.flip()))
                 continue
             self.play(Write(i))
-        self.wait(0.75)
+        self.wait(0.25)
         # Voltear gipT de maneral horizontal
         # self.play(gipT.animate.rotate_about_origin(PI, Y_AXIS))
         self.play(gipT.animate.rotate(PI, Y_AXIS, about_point=ax.get_origin()))
@@ -233,8 +232,8 @@ class MatSup_1(MovingCameraScene):
         self.wait(0.5)  # 0.5 seconds
 
         # Borrar elementos innecesarios
-        self.play([FadeOut(x) for x in [dot_1, dot_2, dot_m, shifted_gip, moving_dot]])
-        del dot_1, dot_2, dot_m, shifted_gip, moving_dot
+        self.play([FadeOut(x) for x in [dot_1, dot_2, dot_m, moving_dot]])
+        del dot_1, dot_2, dot_m, moving_dot
 
         # Dibujar area bajo las curvas
         area_1 = ax.get_area(graph, [0, 1], opacity=0.5)
@@ -242,33 +241,93 @@ class MatSup_1(MovingCameraScene):
 
         self.play(AnimationGroup(Write(area_1), Write(area_2)))
 
+        def equation_updater(obj: MathTex):
+            """Update's the equation's constant based on the graph's center"""
+            new_constant = graph.get_center()[1] - 0.5
+            new_obj = MathTex(r"f(x) = ", f"{new_constant:.3f}", " + |x|").set_color(
+                WHITE
+            )
+            new_obj[1].set_color_by_gradient(DARK_BLUE, RED_D)
+            new_corner = new_obj.get_corner(DOWN + LEFT)
+            old_corner = obj.get_corner(DOWN + LEFT)
+            new_center = new_obj.get_center()
+            new_center[0] += old_corner[0] - new_corner[0]
+            new_center[1] += old_corner[1] - new_corner[1]
+            new_obj.move_to(new_center)
+            # Update the equation's LaTeX with the new constant (formatting to 3 decimal places)
+            obj.become(new_obj)
+
+        def a_0_updater(obj: MathTex):
+            new_constant = graph.get_center()[1]
+            if new_constant <= 0:
+                new_constant = 0
+            new_obj = MathTex(
+                f"a_0 ", "=", f"{new_constant:.3f}"
+            ).set_color_by_gradient(RED_A, PURE_RED)
+            new_obj[0].set_color(RED_A)
+            new_obj[2].set_color(PURE_RED)
+            new_corner = new_obj.get_corner(DOWN + LEFT)
+            old_corner = obj.get_corner(DOWN + LEFT)
+            new_center = new_obj.get_center()
+            new_center[0] += old_corner[0] - new_corner[0]
+            new_center[1] += old_corner[1] - new_corner[1]
+            new_obj.move_to(new_center)
+            obj.become(new_obj)
+
+        # graph.add_updater(lambda _x: equation_updater(equation))
+        # equation.add_updater(equation_updater)
         # Shift up and down by 1 unit, and update the equation to match the graph
-        updated_equation = MathTex("f(x) = |x|").move_to(equation)
 
         # Reduce Areas to fit shifted graph
         reduced_area_1 = ax.get_area(
-            graph.copy().shift(DOWN), [0, 1], opacity=0.5, color=(PURPLE_E, TEAL_A)
+            graph.copy().shift(DOWN * 1.5),
+            [0, 1],
+            opacity=0.5,
+            color=(PURPLE_E, TEAL_A),
         )
         reduced_area_2 = ax.get_area(
-            shifted_graph.copy().shift(UP),
+            shifted_graph.copy().shift(UP * 1.5),
             [0, 1],
             opacity=0.5,
             color=(PURPLE_E, TEAL_A),
         )
         # Animate the shift
+        equation.set_color(WHITE).add_updater(equation_updater)
+
+        a_0 = (
+            MathTex(r"a_{0} ", "=", "1.5")
+            .move_to(equation.get_center())
+            .set_color_by_gradient(RED_A, PURE_RED)
+        )
+        a_0[0].set_color(RED_A)
+        a_0[2].set_color(PURE_RED)
         self.play(
-            AnimationGroup(
-                shifted_graph.animate.shift(UP),
-                graph.animate.shift(DOWN),
-                ReplacementTransform(equation, updated_equation),
-                ReplacementTransform(area_1, reduced_area_1),
-                ReplacementTransform(area_2, reduced_area_2),
-            )
+            FadeIn(a_0),
+            a_0.animate.shift(UP * 2),
         )
 
+        a_0.add_updater(a_0_updater)
+        self.play(
+            AnimationGroup(
+                shifted_graph.animate.shift(UP * 1.5),
+                graph.animate.shift(DOWN * 1.5),
+                shifted_gip.animate.shift(DOWN * 1.5),
+                area_1.animate.become(reduced_area_1),
+                area_2.animate.become(reduced_area_2),
+            ),
+            run_time=2,
+        )
+
+        self.wait(1)
+        self.play(
+            AnimationGroup(
+                FadeOut(shifted_gip),
+                a_0.animate.shift(RIGHT * 50),
+            )
+        )
         # Small Cleanup and variable updating
-        [equation, area_1, area_2] = [updated_equation, reduced_area_1, reduced_area_2]
-        del updated_equation, reduced_area_1, reduced_area_2
+        [area_1, area_2] = [reduced_area_1, reduced_area_2]
+        del reduced_area_1, reduced_area_2, shifted_gip
         self.wait(0.5)
 
         # Create a copy to shift by balf period, and vertically flip
@@ -296,8 +355,8 @@ class MatSup_1(MovingCameraScene):
         transformed_eq = (
             MathTex(
                 r"f(t)=\begin{cases}\
-t & \text{si } -1\leq t\leq 0 \\\
-t& \text{si } 0\leq t\leq 1 \
+-t -0.5 & \text{si } -1\leq t\leq 0 \\\
+\ t  -0.5 & \text{si } 0\leq t\leq 1 \
 \end{cases}; t=[-1,1]"
             )
             .move_to(equation.get_center() + UP * 3)
@@ -305,7 +364,7 @@ t& \text{si } 0\leq t\leq 1 \
         )
         context_text = Text("La función es 1/4 de onda (Par)", color=TEAL_E)
         context_text.width = 8
-        background: List[VMobject] = [ax, graph, area_1, area_2, labels]
+        background: List[VMobject] = [ax, area_1, area_2, labels]
         # Transformar la ecuación base para el rango a evaluar
         CAMERA_SW_CORNER = [-8.5, -4.0, 0.0]
         self.play(
@@ -315,10 +374,13 @@ t& \text{si } 0\leq t\leq 1 \
                 FadeOut(shifted_graph),
                 self.camera.frame.animate.set_width(ax.c2p(9, 9) - ax.c2p(-9, -9)),
                 # reducir la opacidad de los elementos del fondo
+                graph.animate.set_stroke(BLUE, opacity=0.2),
                 *[x.animate.set_opacity(0.2) for x in background],
             )
         )
-
+        background.append(graph)
+        return
+        # Mover la descripción a la esquina inferior izquierda
         self.play(
             context_text.animate.move_to(
                 CAMERA_SW_CORNER - context_text.get_corner(DOWN + LEFT)
@@ -343,7 +405,123 @@ t& \text{si } 0\leq t\leq 1 \
             context[0] = text
             return transform
 
-        last_solution = None
+        solution_steps: Tuple[str, str] = [
+            (
+                "f(x)=|x|",
+                r"f(x)=|x| \text{ tiene simetria Cuarto-Onda (Par)}, asi que",
+            ),
+            (
+                "Debido a la que la función es par",
+                r"\begin{aligned}\
+a_{n}= & \frac{8}{T}\int^{T/4}_{0}{f(t) \cdot \sin(k \omega t)}dt\\\
+b_{n}= & 0 \text{ (Por ser simetría par)}\
+\end{aligned}",
+            ),
+            (
+                "Asi que trabajando a_n",
+                r"a_{n}= \frac{8}{T}\int^{T/4}_{0}{f(t) \cdot \sin(k \omega t)}dt",
+            ),
+            (
+                "Reemplazamos T",
+                r"a_{n}= \frac{8}{T}\int^{T/4}_{0}{\cancelto{ t }{ f(t) } \cdot \sin(k \omega t)}dt",
+            ),
+            (
+                "",
+                r"a_{n}= \frac{8}{\cancelto{ 2 }{ T }}\int^{\cancelto{ 1/2 }{ T/4 }}_{0}{t \cdot \sin\left( k \cancelto{ \frac{2\pi}{2} }{ \omega } t \right)}dt",
+            ),
+            ("", r"a_{n}= 4\int^{1/2}_{0}{t \cdot \sin\left( k \pi t \right)}dt"),
+            (
+                "Resolvemos la integración",
+                r"a_{n}= 4 \left[ -\frac{t}{k\pi}cos(k\pi t) + \
+\frac{1}{(k\pi)^{2}}\sin(k\pi t) \right]^{1/2}_{0}",
+            ),
+            (
+                "Evaluamos los límites",
+                r"a_{n}= 4 \left[ \
+-\frac{1}{2k\pi}cos\left( \frac{\pi}{2}k \right) + \
+\frac{1}{(k\pi)^{2}}\sin\left( \frac{\pi}{2}k \right) \
++ \xcancel{\frac{0}{2k\pi}cos(0) } \
+- \xcancel{ \frac{1}{(k\pi)^{2}}\sin(0) }\
+\right]",
+            ),
+            (
+                "Simplificamos",
+                r"a_{n}= \
+-\frac{2}{k\pi}cos\left( \frac{\pi}{2}k \right) + \
+\frac{4}{(k\pi)^{2}}\sin\left( \frac{\pi}{2}k \right) ",
+            ),
+            (
+                "Comprimimos seno y coseno(?)",
+                r"a_{n}= \
+-\frac{2}{k\pi}(-1)^{2n} + \
+\frac{4}{(k\pi)^{2}}(-1)^{2n-1}",
+            ),
+            (
+                "Reemplazamos para en f(t)(?)",
+                r"f(t)=\frac{1}{2}a_{0}+\
+  \sum^{\infty}_{n=1}a_{n}\cos(n\omega t)+\
+  \sum^{\infty}_{n=1}b_{n}\sin(n\omega t)",
+            ),
+            (
+                "Ingresamos a_n(?)",
+                r"\begin{aligned}\
+f(t)=&\frac{1}{2}a_{0}+\
+\sum^{\infty}_{n=1}\cancel{ a_{n} }\cos(n\omega t)+\
+\xcancel{\sum^{\infty}_{n=1}b_{n}\sin(n\omega t)} \\\
+a_{n}=&-\frac{2}{k\pi}(-1)^{2n} + \
+\frac{4}{(k\pi)^{2}}(-1)^{2n-1}\
+\end{aligned}",
+            ),
+            (
+                "Forma final (sin a_0)(?)",
+                r"f(t)=\frac{1}{2}a_{0}+\
+\sum^{\infty}_{n=1}\left[ -\frac{2}{k\pi}(-1)^{2n} + \
+\frac{4}{(k\pi)^{2}}(-1)^{2n-1} \right] \cos(2n t)",
+            ),
+        ]
+        to_drop = None
+        to_shift_again = None
+        last_solution = transformed_eq
+
+        for desc, step in solution_steps:
+            step = custom_mathtex(step)
+            desc = with_context(desc, context)
+            # Position step just above x axis
+            step_sw_corner = step.get_corner(DOWN + LEFT)
+            # Get center point because .move_to() moves the center of the object
+            step_center = step.get_center()
+            step_center[1] = 0 - step_sw_corner[1]
+            step.move_to(step_center)
+
+            animation_list = []
+            if to_shift_again is not None:
+                center = to_shift_again.get_center()
+                center[1] = (
+                    last_solution.height
+                    + step.height
+                    + to_shift_again.height * 0.5
+                    + 0.4
+                )
+                animation_list.append(to_shift_again.animate.move_to(center))
+                if to_drop is not None:
+                    animation_list.append(to_drop.animate.shift(UP * 2))
+                    animation_list.append(FadeOut(to_drop))
+                to_drop = to_shift_again
+            to_shift_again = last_solution
+
+            self.play(
+                AnimationGroup(
+                    last_solution.animate.next_to(step, UP),
+                    TransformMatchingShapes(last_solution.copy(), step),
+                    desc,
+                    *animation_list,
+                    run_time=2,
+                ),
+            )
+            self.wait(0.5)
+            last_solution = step
+        self.wait(1)
+        return  # Early return
         self.play(
             AnimationGroup(Write(solution1), with_context("Hello World", context))
         )
@@ -351,7 +529,6 @@ t& \text{si } 0\leq t\leq 1 \
         solution2 = custom_mathtex(
             r"A_{n}=\frac{1}{2}\int_{0}^{T/2}{\left(\cos(n\omega t)+t\cos(n\omega t)\right)dt}"
         ).next_to(solution1, DOWN)
-        self.wait()
         self.play(
             AnimationGroup(
                 ReplacementTransform(solution1.copy(), solution2),
@@ -363,7 +540,6 @@ t& \text{si } 0\leq t\leq 1 \
         solution3 = MathTex(
             r"A_{n}=\frac{1}{2} \left[\frac{\sin(n \pi t)}{n\pi}+\frac{t}{n\pi}\sin(n\pi t)+\frac{1}{(n\pi)^{2}}\cos(n\pi t)\right]_{0}^{1} "
         ).set_color(BLUE_E)
-        self.wait()
         self.play(
             AnimationGroup(
                 solution2.animate.shift(UP * 2),
