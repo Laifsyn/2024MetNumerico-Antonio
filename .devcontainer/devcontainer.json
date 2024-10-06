@@ -10,6 +10,10 @@
 			"version": "latest",
 			"jdkDistro": "tem",
 			"mavenVersion": "latest"
+		},
+		"ghcr.io/devcontainers/features/python:1": {
+			"installTools": true,
+			"version": "latest"
 		}
 	},
 	// Configure tool-specific properties.
@@ -19,7 +23,7 @@
 			"settings": {
 				"workbench.colorTheme": "One Dark Pro Mix",
 				"editor.formatOnSave": true,
-				"java.format.settings.url": "eclipse-formatter.xml",
+				"java.format.settings.url": "eclipse-formatter.xml"
 			},
 			"extensions": [
 				"formulahendry.code-runner",
@@ -31,14 +35,19 @@
 				"yzhang.markdown-all-in-one",
 				// "shengchen.vscode-checkstyle",
 				// "SonarSource.sonarlint-vscode",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				// Python extensions.
+				"donjayamanne.python-extension-pack"
 			]
 		}
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "java -version"
+	"postCreateCommand": [
+        "python3 -V",
+        "pip install -r requirements.txt"
+    ],
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

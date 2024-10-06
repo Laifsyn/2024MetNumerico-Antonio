@@ -1,6 +1,8 @@
 package ii_2024.met_numerico.aproximacion;
 
-
+/**
+ * Funciones de dos argumentos
+ */
 public interface FOfXY {
     double eval(double x_new, double x_old);
 
