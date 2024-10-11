@@ -66,4 +66,18 @@ El proyecto debe entregarse en base a la plantilla de proyectos.
 
 # Referencias
 
+
+[Determinante de una matriz triangular (Marzo 2019)](https://www.youtube.com/watch?v=oW1oiEmCrA0)
+[Matriz Inversa a través de Matriz Identidad (Julio 2019)](https://www.youtube.com/watch?v=lrh5MKNZihQ)
 [Consistencia e Inconsistencias](https://ionamaths.weebly.com/uploads/1/4/2/0/14204419/consistencyanddependency.pdf)
+
+- Se complicó controlar la visibilidad del constructor canónico de un record en java 
+- No podía esconder el constructor por defecto que creaba java.
+
+- En Python, se complicaban algunos aspectos del programa cuando usabas `Self` para definir el tipo de dato que devolvía una función o que recibía un método.
+
+
+
+
+
+
