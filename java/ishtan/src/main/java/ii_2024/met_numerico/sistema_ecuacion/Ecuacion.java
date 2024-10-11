@@ -1,5 +1,6 @@
 package ii_2024.met_numerico.sistema_ecuacion;
 
+// Nota: No he pensado muy a detalle las implicaciones de usar entre `Double[]` o `double[]`
 public final record Ecuacion(Double[] coeficientes, double resultado, int variables) {
 
     // Método estático para instanciación. Contiene la lógica de validación
@@ -49,13 +50,24 @@ public final record Ecuacion(Double[] coeficientes, double resultado, int variab
      * escalar.
      */
     public Ecuacion producto_escalar(final double escalar) {
+        if (escalar == 1) {
+            System.err.println(
+                    "Se está multiplicando la ecuación por 1, lo cual no tiene efecto. Se recomienda clonarlo directamente.");
+            return this.clone();
+        }
         final double resultado = this.resultado * escalar;
         final int grado = this.variables;
+
         final Double[] nuevos_coeficientes = new Double[grado];
         for (int i = 0; i < grado; i++) {
             nuevos_coeficientes[i] = this.coeficientes[i] * escalar;
         }
+
         return Ecuacion.of(nuevos_coeficientes, resultado);
+    }
+
+    public Ecuacion clone() {
+        return Ecuacion.of(this.coeficientes.clone(), this.resultado);
     }
 
     public String toString() {
