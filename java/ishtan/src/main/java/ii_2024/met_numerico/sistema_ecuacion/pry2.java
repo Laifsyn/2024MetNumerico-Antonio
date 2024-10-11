@@ -32,7 +32,7 @@ public class pry2 {
 
     public static double[] por_matriz_inversa(SistemaEcuacion eq) {
 
-        System.out.println("Despeje por raíz inversa de la siguiente matriz:\n" + eq);
+        System.out.println("Despeje por inversa de la siguiente matriz:\n" + eq);
         Ecuacion[] inversa = eq.matriz_inversa();
         System.out.println("Inversa de la matriz a evaluar:");
         for (Ecuacion ecuacion : inversa) {
@@ -165,7 +165,7 @@ final class SistemaEcuacion {
                 Ecuacion fila_a = this.ecuaciones[base_row], fila_b = this.ecuaciones[row];
                 double escalar_a = fila_a.coeficientes()[col];
                 double escalar_b = fila_b.coeficientes()[col];
-                if (escalar_b == 0) {
+                if (escalar_b == 0 || escalar_a == 0) {
                     continue;
                 }
                 Ecuacion f_a = fila_a.producto_escalar(escalar_b / escalar_a);
@@ -222,7 +222,7 @@ final class SistemaEcuacion {
 
         // Clonar el sistema de ecuaciones para no modificar el original
         SistemaEcuacion sistema = original.clone();
-        original = null;
+        original = null; // Asegurarse que el original no se modifique por accidente
         final int FILAS = sistema.filas;
 
         // Expandir sistema de ecuaciones con una matriz identidad para que sea
