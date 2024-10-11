@@ -4,6 +4,67 @@ import java.util.Arrays;
 
 public class pry2 {
 
+    public static double[] despeje_por_gauss_jordan(SistemaEcuacion eq) {
+
+        // Escribir nombre de las variables
+        String[] variables = new String[eq.filas()];
+        for (int i = 0; i < eq.filas(); i++) {
+            variables[i] = "x_" + (i + 1);
+        }
+        System.out.println("Despeje por Gauss Jordan de la siguiente matriz:\n" + eq);
+
+        // Operar la matriz
+        eq.a_triangular_inferior();
+        eq.a_triangular_superior();
+        eq.a_diagonal_unitario();
+        double[] respuestas = new double[eq.filas()];
+        for (int i = 0; i < eq.filas(); i++) {
+            double respuesta = eq.resultado(i);
+            respuestas[i] = respuesta;
+            if (respuesta < 0) {
+                System.out.println(variables[i] + " = " + respuesta);
+            } else {
+                System.out.println(variables[i] + " =  " + respuesta);
+            }
+        }
+        return respuestas;
+    }
+
+    public static double[] por_matriz_inversa(SistemaEcuacion eq) {
+
+        System.out.println("Despeje por raíz inversa de la siguiente matriz:\n" + eq);
+        Ecuacion[] inversa = eq.matriz_inversa();
+        System.out.println("Inversa de la matriz a evaluar:");
+        for (Ecuacion ecuacion : inversa) {
+            System.out.println(ecuacion);
+        }
+        System.out.println("");
+        // Se asume que siempre se tendrá n-filas para n-incógnitas
+        double[] respuestas = new double[eq.filas()];
+        for (int fila = 0; fila < eq.filas(); fila++) {
+            Ecuacion fila_n = inversa[fila];
+            for (int i = 0; i < eq.filas(); i++) {
+                respuestas[fila] += fila_n.coeficientes()[i] * eq.resultado(i);
+            }
+        }
+
+        // Escribir nombre de las variables
+        String[] variables = new String[eq.filas()];
+        for (int i = 0; i < eq.filas(); i++) {
+            variables[i] = "x_" + (i + 1);
+        }
+
+        for (int i = 0; i < respuestas.length; i++) {
+            double respuesta = respuestas[i];
+            if (respuesta < 0) {
+                System.out.println(variables[i] + " = " + respuesta);
+            } else {
+                System.out.println(variables[i] + " =  " + respuesta);
+            }
+        }
+        return respuestas;
+    }
+
     public static void main(String[] args) {
         Ecuacion[] eqs = {
                 Ecuacion.of(new Double[] { 3.0, 2.0, 1.0, 4.0 }, 110),
@@ -11,29 +72,23 @@ public class pry2 {
                 Ecuacion.of(new Double[] { 1.0, 3.0, 2.0, 1.0 }, 85),
                 Ecuacion.of(new Double[] { 1.0, 2.0, 1.0, 2.0 }, 95)
         };
-        SistemaEcuacion sistema_eq = new SistemaEcuacion(eqs.clone());
-        // sistema_eq.a_triangular_superior();
-        // System.out.println(sistema_eq);
-        // sistema_eq.a_diagonal_unitario();
-        // System.out.println(sistema_eq);
+        SistemaEcuacion sistema_eq = new SistemaEcuacion(eqs);
+        double[] por_gauss_jordan = pry2.despeje_por_gauss_jordan(sistema_eq.clone());
+        System.out.println("\n");
+        double[] por_inversa = pry2.por_matriz_inversa(sistema_eq.clone());
 
-        sistema_eq.matriz_inversa();
-
-        System.err.println("Original:" + sistema_eq);
-        // sistema_eq = new SistemaEcuacion(eqs.clone());
-        // sistema_eq.a_triangular_inferior();
-        // System.out.println(sistema_eq);
-        // sistema_eq.a_diagonal_unitario();
-        // System.out.println("\n\n\n" + sistema_eq);
-        // sistema_eq.a_triangular_superior();
-        // System.out.println(sistema_eq);
+        System.out.println("Comparación de ambos métodos (Gauss Jordan seguido de Inversa):");
+        for (int i = 0; i < por_gauss_jordan.length; i++) {
+            String var = "x_" + (i + 1);
+            System.out.println(var + " = " + por_gauss_jordan[i] + "\n" + " ".repeat(var.length() + 3) + por_inversa[i]);
+        }
 
     }
 }
 
 /**
  * Un sistema de ecuaciones lineales, que garantiza que todas las ecuaciones
- * sean del mismo grado
+ * sean del mismo "grado"
  */
 final class SistemaEcuacion {
     private final Ecuacion[] ecuaciones;
@@ -76,7 +131,6 @@ final class SistemaEcuacion {
         int dim = this.filas;
         int ultima_columna = dim - 1; // Indice de la última fila
         // (2) Recorrer por columna (empezando desde la última columna)
-        System.out.println(this);
         for (int col = ultima_columna; col >= 1; col--) {
             int base_row = col; // Fila base
             // (1) Recorrer por fila (empenzando desde la última fila)
@@ -88,14 +142,12 @@ final class SistemaEcuacion {
                     continue;
                 }
                 Ecuacion f_a = fila_a.producto_escalar(escalar_b / escalar_a);
-                Ecuacion f_b = fila_b.producto_escalar(1);
+                Ecuacion f_b = fila_b.clone();
 
                 // Asignar la resta de la fila
                 this.ecuaciones[row] = f_b.resta(f_a);
             }
-            System.out.println(this);
         }
-        // System.out.println("END");
         return;
     }
 
@@ -117,13 +169,12 @@ final class SistemaEcuacion {
                     continue;
                 }
                 Ecuacion f_a = fila_a.producto_escalar(escalar_b / escalar_a);
-                Ecuacion f_b = fila_b.producto_escalar(1);
+                Ecuacion f_b = fila_b.clone();
 
                 // Asignar la resta de la fila
                 this.ecuaciones[row] = f_b.resta(f_a);
             }
         }
-        // System.out.println("END");
         return;
     }
 
@@ -206,9 +257,7 @@ final class SistemaEcuacion {
                 coeficientes[j] = sistema.ecuaciones[fila].coeficientes()[FILAS + j];
             inversa[fila] = Ecuacion.of(coeficientes, 0);
         }
-        
         return inversa;
-
     }
 
     public String toString() {
@@ -217,5 +266,13 @@ final class SistemaEcuacion {
             sb.append(ecuacion.toString()).append("\n");
         }
         return sb.toString();
+    }
+
+    public int filas() {
+        return this.filas;
+    }
+
+    public double resultado(int fila) {
+        return this.ecuaciones[fila].resultado();
     }
 }

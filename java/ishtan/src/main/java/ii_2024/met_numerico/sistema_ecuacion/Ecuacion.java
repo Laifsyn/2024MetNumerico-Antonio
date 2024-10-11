@@ -51,8 +51,6 @@ public final record Ecuacion(Double[] coeficientes, double resultado, int variab
      */
     public Ecuacion producto_escalar(final double escalar) {
         if (escalar == 1) {
-            System.err.println(
-                    "Se está multiplicando la ecuación por 1, lo cual no tiene efecto. Se recomienda clonarlo directamente.");
             return this.clone();
         }
         final double resultado = this.resultado * escalar;
