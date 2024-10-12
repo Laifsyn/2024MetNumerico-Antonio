@@ -137,23 +137,24 @@ class GraphMap:
         return edge
 
     def get_adjacent_vertexes(
-        self, src: Vertex | VertexId
+        self, src: Vertex
     ) -> Optional[list[Tuple[Vertex, EdgeWeight]]]:
-        if isinstance(src, Vertex):
-            src = src.id
 
         adjacent_vertexes = list()
 
+        # search for the edges that have the source vertex as the starting point
         for edge in self.edges:
-            if edge.from_v.id == src:
+            if edge.from_v.id == src.id:
                 adjacent_vertexes.append((edge.to_v, 0))
+
         if len(adjacent_vertexes) > 0:
             return adjacent_vertexes
         return None
 
 
 class Dijkstra:
-    vertexes_weight: Dict[Vertex, WeightSoFar | None]
+    vertex_weight: Dict[Vertex, WeightSoFar | None]
+    return_vertex: Dict[Vertex, Vertex | None]
     steps: int = 0
     solution: Generator[Optional[Tuple]]
 
@@ -176,9 +177,9 @@ class Dijkstra:
     def __init__(self, graph: GraphMap, start_vertex: Vertex) -> None:
         self.graph = graph
         for vertexes in self.graph.vertices.values():
-            self.vertexes_weight.update({vertexes: None})
+            self.vertex_weight.update({vertexes: None})
 
-        self.vertexes_weight[start_vertex] = 0
+        self.vertex_weight[start_vertex] = 0
         self.solution = self.gen_solution()
 
     def advance(self, steps: int = 1):
@@ -188,15 +189,56 @@ class Dijkstra:
 
     def gen_solution(self) -> Generator[Tuple[()]]:
         self.shortest_path = None
-        start_vertex = None
-        for vertex, weight_so_far in self.vertexes_weight.items():
-            if weight_so_far == 0:
-                start_vertex = vertex
-                break
-        else:
-            raise ValueError("No starting vertex found")
-        adjacent_vertexes = self.graph.get_adjacent_vertexes(start_vertex)
-        
+        start_vertex = self.get_next_smallest()
+        # vertex_queue = [start_vertex]
         while self.shortest_path == None:
+            neighbour_nodes = self.get_adjacent(start_vertex)
+            start_vertex.explore()
+            if neighbour_nodes is None:
+                raise ValueError("TODO:No adjacent vertexes found")
 
-            yield ()
+            # neighbour, weight_to_neighbour
+            for neighbour, weight_to in neighbour_nodes:
+                weight_till_neighbour = self.vertex_weight[neighbour]
+                this_weight = self.get_weight(start_vertex)
+                if (
+                    weight_till_neighbour is None
+                    or this_weight + weight_to < weight_till_neighbour
+                ):
+                    self.vertex_weight[neighbour] = this_weight + weight_to
+                    self.return_vertex[neighbour] = start_vertex
+                yield ()
+            start_vertex = self.get_next_smallest()
+
+    def get_next_smallest(self) -> Vertex:
+        # Filter out visited nodes from the vertexes
+
+        smallest_vertex = []
+        for vertex, weight in self.vertex_weight.items():
+            if weight is None:
+                continue
+            if vertex.explored == ExplorationStatus.EXPLORED:
+                continue
+            smallest_vertex.append((vertex, weight))
+            smallest_vertex.sort(key=lambda x: x[1])
+
+        for vertex, _weight in smallest_vertex:
+            return vertex
+        raise ValueError("No starting vertex found")
+
+    def get_weight(self, vertex: Vertex) -> WeightSoFar:
+        """For the checked alternative, directly call the self.vertex_weight[vertex]
+
+        Raises:
+            ValueError: Raises error when the vertex has no weight
+
+        Returns:
+            WeightSoFar: the weight (int) value of this vertex
+        """
+        weight = self.vertex_weight[vertex]
+        if weight is None:
+            raise ValueError("No weight found for vertex")
+        return weight
+
+    def get_adjacent(self, vertex: Vertex) -> Optional[list[Tuple[Vertex, EdgeWeight]]]:
+        return self.graph.get_adjacent_vertexes(vertex)
