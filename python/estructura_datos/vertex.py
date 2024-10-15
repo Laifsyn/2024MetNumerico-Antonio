@@ -103,9 +103,6 @@ class Edge:
             f"An object of type {type(other)} was passed when an object of type {Edge} was expected"
         )
 
-    def targets_vertex(self, other_vertex: Vertex):
-        return self.to_v == other_vertex
-
     def __hash__(self) -> int:
         # Combine the hash values of weight, from_v, and to_v
         return hash((self.weight, self.from_v, self.to_v))
@@ -114,7 +111,7 @@ class Edge:
 WeightSoFar = int
 
 
-Coords = Tuple[float, float]
+Coords = Tuple[float, float, float]
 
 
 class GraphMap:
@@ -175,31 +172,6 @@ class GraphMap:
             vertex
             for vertex in sorted(list(self.vertices.values()), key=lambda x: x.id)
         ]
-
-    def get_edges(self) -> List[Tuple[Vertex, Vertex]]:
-        return [(edge.from_v, edge.to_v) for edge in self.edges]
-
-    def get_vertexes_layout(self) -> Dict[Vertex, Tuple[float, float, float]]:
-        layout = dict()
-        for coords, vertex in self.vertices.items():
-            layout.update({vertex: (coords[0], coords[1], 0.0)})
-        return layout
-
-    def get_vertex_position(self, v: Vertex) -> Coords:
-        for coords, vertex in self.vertices.items():
-            if vertex == v:
-                return coords
-        raise ValueError("Vertex not found")
-
-    # TODO: Delete this method
-    def get_center(self, v1: Vertex, v2: Vertex) -> Tuple[float, float]:
-        # get the coords for the vertex
-        coords: list[Coords] = [
-            self.get_vertex_position(v1),
-            self.get_vertex_position(v2),
-        ]
-        return tuple((a + b) / 2 for a, b in zip(*coords))
-        pass
 
     def debug(self):
         # print vertexes
@@ -342,6 +314,10 @@ class Dijkstra:
                 continue
             if vertex.status == ExplorationStatus.EXPLORED:
                 continue
+            # Skip Node Weights bigger than target's Node's Weight
+            targets_weight = self.vertex_weight[self.target_vertex]
+            if targets_weight is not None and weight > targets_weight:
+                continue
             smallest_vertex.append((vertex, weight))
         smallest_vertex.sort(key=lambda x: x[1])
 
@@ -390,95 +366,6 @@ class Dijkstra:
         print("\n")
 
 
-# def main():
-#     map = GraphMap()
-#     map.register_vertexes(
-#         [
-#             (Vertex(1), (0, 0)),
-#             (Vertex(2), (1, 1)),
-#             (Vertex(3), (1, -1)),
-#             (Vertex(4), (2, 1)),
-#             (Vertex(5), (2, -1)),
-#             (Vertex(6), (3, 1)),
-#             # (Vertex(7), (3, -1)),
-#             # (Vertex(8), (4, 0)),
-#         ]
-#     )
-#     edges = [
-#         (1, 2),
-#         (1, 4),
-#         (2, 1),
-#         (2, 4),
-#         (2, 5),
-#         (4, 1),
-#         (4, 2),
-#         (4, 5),
-#         (4, 6),
-#         (5, 2),
-#         (5, 4),
-#         (5, 6),
-#         (5, 3),
-#         (6, 5),
-#         (6, 4),
-#         (6, 3),
-#         (3, 5),
-#         (3, 6),
-#     ]
-#     for i in range(len(edges)):
-#         map.define_edge(i + 1, edges[i][0], edges[i][1])
-#     map.debug()
-
-#     dijkstra = Dijkstra.new(map, 3)
-#     # TODO Remove debug print
-#     print("Advancing:")
-#     dijkstra.advance(5, True)
-
-# # main()
-# def main_2():
-#     map = GraphMap()
-#     map.register_vertexes(
-#         [
-#             (Vertex(1), (0, 0)),
-#             (Vertex(2), (1, 1)),
-#             (Vertex(4), (1, -1)),
-#             (Vertex(5), (2, 1)),
-#             (Vertex(6), (2, -1)),
-#             (Vertex(3), (3, 1)),
-#         ]
-#     )
-#     edges = [
-#         (2, 1, 2),
-#         (8, 1, 4),
-#         (2, 2, 1),
-#         (5, 2, 4),
-#         (6, 2, 5),
-#         (8, 4, 1),
-#         (5, 4, 2),
-#         (3, 4, 5),
-#         (2, 4, 6),
-#         (6, 5, 2),
-#         (3, 5, 4),
-#         (1, 5, 6),
-#         (9, 5, 3),
-#         (1, 6, 5),
-#         (2, 6, 4),
-#         (3, 6, 3),
-#         (9, 3, 5),
-#         (3, 3, 6),
-#     ]
-#     for weight, _from, to in edges:
-#         map.define_edge(weight, _from, to, True)
-#     map.debug()
-
-#     dijkstra = Dijkstra.new(map, 1, 3)
-#     if dijkstra is None:
-#         print("Dijkstra is None")
-#         return
-#     # TODO Remove debug print
-#     print("Advancing:")
-#     dijkstra.advance(15, True)
-
-
 def main_1():
     # https://www.youtube.com/watch?v=EFg3u_E6eHU
     map = GraphMap()
@@ -514,4 +401,61 @@ def main_1():
     print("Dijkstra at main_1()")
 
 
-main_1()
+# main_1()
+
+
+def main_2() -> None:
+
+    # Should be the map below
+    # https://www.youtube.com/watch?v=EFg3u_E6eHU
+    map = GraphMap()
+    vertexes: list[Tuple[Vertex, Tuple[float, float, float]]] = [
+        (Vertex(19), (2, 3, 0.5)),
+        (Vertex(1), (0, 1, -1)),
+        (Vertex(2), (2.8, 0, -1)),
+        (Vertex(3), (6.8, 2.8, -1)),
+        (Vertex(4), (0.0, -1, 2)),
+        (Vertex(5), (6.7, -4.0, -1)),
+        (Vertex(6), (1.0, -3.5, 1)),
+        (Vertex(7), (4.0, -3.3, 1.5)),  # G
+        (Vertex(8), (2.0, -2, -1)),  # H
+        (Vertex(9), (7.0, -1, 0)),  # I
+        (Vertex(10), (10.0, -1, -1)),  # J
+        (Vertex(11), (8.5, -2.5, 1)),  # K
+        (Vertex(12), (8.5, 0.5, 1)),  # L
+    ]
+    vertexes = [(v, (x * 2, y * 2, z * 2)) for v, (x, y, z) in vertexes]
+    map.register_vertexes(vertexes)
+
+    edges = [
+        (3, 1, 2),
+        (4, 1, 4),
+        (7, 1, 19),
+        (4, 2, 4),
+        (1, 2, 8),
+        (2, 2, 19),
+        (3, 3, 19),
+        (2, 3, 12),
+        (4, 12, 9),
+        (4, 12, 10),
+        (6, 9, 10),
+        (4, 9, 11),
+        (4, 10, 11),
+        (5, 11, 5),
+        (2, 5, 7),
+        (2, 7, 8),
+        (3, 6, 8),
+        (5, 4, 6),
+    ]
+    for weight, _from, to in edges:
+        map.define_edge(weight, _from, to, True)
+
+    # map.debug()
+    dijkstra = Dijkstra.new(map, 19, 5)
+    steps = 500  # Some arbitrary step amount
+    if dijkstra is None:
+        raise Exception("Map is None")
+    dijkstra.advance(steps, True)
+
+
+main_2()
