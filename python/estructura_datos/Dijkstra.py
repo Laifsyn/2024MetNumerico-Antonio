@@ -91,9 +91,9 @@ class Manim_Dijkstra(Scene):  # type: ignore
                     LaggedStart(anims, lag_ratio=0.4),
                     LaggedStart(rects, lag_ratio=0.3),
                     lag_ratio=0.4,
-                    run_time=4,
                     rate=rate_functions.ease_in_cubic,
                 ),
+                run_time=7,
             )
             [anim.animate.set_z_index(10) for _, anim in animations]
             del animations
@@ -121,7 +121,7 @@ class Manim_Dijkstra(Scene):  # type: ignore
             self.vertex_weights[v] = (weight_label, node_weight, None)
         if self.animate_drawing_node_weights:
             anims = [Write(tex) for tex, *_ in self.vertex_weights.values()]
-            self.play(LaggedStart(*anims, lag_ratio=0.4), run_time=2.5)
+            self.play(LaggedStart(*anims, lag_ratio=0.4), run_time=4.5)
         else:
             anims = [tex for tex, *_ in self.vertex_weights.values()]
             self.add(*anims)
@@ -157,9 +157,8 @@ class Manim_Dijkstra(Scene):  # type: ignore
         self.camera.frame_center = g.get_center()
         self.camera.frame_width = self.camera.frame_width * 1.2
         self.camera.frame_height = self.camera.frame_height * 1.2
-        self.play(Write(g))
+        self.play(Write(g), run_time=6)
         self.draw_weigthed_edges()
-        self.draw_node_weight()
         self.wait()
         # endregion: SETUP
 
@@ -173,6 +172,8 @@ class Manim_Dijkstra(Scene):  # type: ignore
                 )
             )
         )
+
+        self.draw_node_weight()
 
         start_vertex = self.dijkstra.get_start_vertex()
         label = self.vertex_weights[start_vertex][0]
@@ -249,7 +250,7 @@ class Manim_Dijkstra(Scene):  # type: ignore
             LaggedStart(FadeOut(self.highlight_rectangle), *path, lag_ratio=0.6),
             run_time=4,
         )
-        self.wait()
+        self.wait(3)
 
     def get_path_resolution_animation(self) -> List[ReplacementTransform]:
         goal = self.dijkstra.target_vertex
