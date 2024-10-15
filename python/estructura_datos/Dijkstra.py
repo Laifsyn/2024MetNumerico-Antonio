@@ -2,7 +2,6 @@ from typing import Any, Callable, OrderedDict, Set, Tuple
 from manim import *
 from manim.typing import Point3D
 
-
 from vertex import Dijkstra, Edge, GraphMap, Vertex
 
 
@@ -32,11 +31,21 @@ class Manim_Dijkstra(Scene):  # type: ignore
         dijkstra, steps = dijkstra_func_1()
         self.dijkstra: Dijkstra = dijkstra
         self.steps: int = steps
+        # Holds the Mobjects of the vertexes and their weights
+        # TODO Consider giving it a more fitting name. This has been working as a sort of Stack flow
+        self.vertex_weights: Dict[Vertex, Tuple[MathTex, int | None, Arrow | None]] = (
+            dict()
+        )
+        self.highlight_rectangle = Rectangle(TEAL_D, 1.5, 1.5).set_z_index(1)
+        self.g: Graph
+
+        # self.weights_labels: dict[Tuple[Vertex, Vertex], Tuple[Tex, Rectangle]] = dict()
         # TODO Undo debug settings
         config.frame_rate = 24
         self.animate_drawing_weighted_edges = True  # Default: True
+        self.animate_drawing_node_weights = self.animate_drawing_weighted_edges
 
-    def draw_weigthed_edges(self) -> Any:
+    def draw_weigthed_edges(self) -> None:
         # Weights Setup: Get the midpoint between vertexes
         positions: OrderedDict[Tuple[Vertex, Vertex], Point3D] = OrderedDict()
         for from_v, to_v in [
@@ -54,7 +63,7 @@ class Manim_Dijkstra(Scene):  # type: ignore
             positions.update({(from_v, to_v): pos})
 
         # Instantiate Animations
-        animations: list[Tuple[Rectangle, Tex]] = list()
+        animations: list[Tuple[Tex, Rectangle]] = list()
         for (from_v, to_v), pos in positions.items():
             # find the matching edge in the graph
             for edge in self.dijkstra.graph.edges:
@@ -68,19 +77,25 @@ class Manim_Dijkstra(Scene):  # type: ignore
                 .move_to(pos)
                 .set_stroke(GREEN_A, opacity=0.7)
             )
-            weight = Tex(str(weight)).move_to(pos).set_color(TEAL_E)
-            animations.append((weight_background, weight))
+            tex_weight = Tex(str(weight)).move_to(pos).set_color(TEAL_E)
+            weight_background.set_z_index(1)
+            tex_weight.set_z_index(2)
+            animations.append((tex_weight, weight_background))
 
         # Commit the Animations
         if self.animate_drawing_weighted_edges:
             rects = [FadeIn(rect) for rect, _ in animations]
             anims = [Write(anim) for _, anim in animations]
-            
             self.play(
                 AnimationGroup(
-                    LaggedStart(rects, lag_ratio=0.3), LaggedStart(anims, lag_ratio=.4), lag_ratio=0.4, run_time=4, rate=rate_functions.ease_in_cubic
+                    LaggedStart(anims, lag_ratio=0.4),
+                    LaggedStart(rects, lag_ratio=0.3),
+                    lag_ratio=0.4,
+                    run_time=4,
+                    rate=rate_functions.ease_in_cubic,
                 ),
             )
+            [anim.animate.set_z_index(10) for _, anim in animations]
             del animations
         else:
             # Flatten the tuple
@@ -89,32 +104,184 @@ class Manim_Dijkstra(Scene):  # type: ignore
             ]  # If you praise me, or judge me for this: Copilot suggested this.
             self.add(*animations)
 
+    def draw_node_weight(self) -> None:
+        # retrieve vertexes in ascending order
+        vertexes = self.dijkstra.graph.get_vertexes_ids()
+        self.vertex_weights: Dict[Vertex, Tuple[MathTex, int | None, Arrow | None]] = (
+            dict()
+        )
+        for v in vertexes:
+            node_weight = self.dijkstra.vertex_weight[v]
+
+            if node_weight is None:
+                weight_label = MathTex("\infty")
+            else:
+                weight_label = MathTex(str(node_weight))
+            weight_label.next_to(self.g.vertices[v], DOWN).set_color(PURPLE_A)
+            self.vertex_weights[v] = (weight_label, node_weight, None)
+        if self.animate_drawing_node_weights:
+            anims = [Write(tex) for tex, *_ in self.vertex_weights.values()]
+            self.play(LaggedStart(*anims, lag_ratio=0.4), run_time=2.5)
+        else:
+            anims = [tex for tex, *_ in self.vertex_weights.values()]
+            self.add(*anims)
+        start_vertex = self.dijkstra.get_start_vertex()
+        label = self.vertex_weights[start_vertex][0]
+        self.play(
+            Write(
+                self.highlight_rectangle.move_to(
+                    (self.g.vertices[start_vertex].get_center() + label.get_center())
+                    / 2
+                )
+            )
+        )
+
     def construct(self):
+        # region: SETUP graph
         vertices = self.dijkstra.graph.get_vertexes_ids()
         unique_edges = self.get_unique_edges_vertexes()
         vertices_layout = self.dijkstra.graph.get_vertexes_layout()
 
         edge_config = {
             "stroke_width": 2,
-            (Vertex(3), Vertex(1)): {
+            (
+                Vertex(3),
+                Vertex(1),
+            ): {  # Vestige code so I can use this as an example in the future
                 "stroke_width": 10.0,
                 "color": BLUE,
                 "tip_config": {"tip_length": 0.25, "tip_width": 0.25},
             },
         }
 
-        g = Graph(
+        self.g = g = Graph(
             vertices,
             unique_edges,
             labels=True,
             layout=vertices_layout,
             edge_config=edge_config,
         ).scale(1)
-
+        self.highlight_rectangle.move_to(
+            g.vertices[self.dijkstra.get_start_vertex()].get_center()
+        )
         self.camera.frame_center = g.get_center()
-        self.play(Create(g))
+        self.camera.frame_width = self.camera.frame_width * 1.2
+        self.camera.frame_height = self.camera.frame_height * 1.2
+        self.play(Write(g))
         self.draw_weigthed_edges()
+        self.draw_node_weight()
         self.wait()
+        # endregion: SETUP
+
+        self.play(
+            Write(
+                Text("Dijkstra's Algorithm")
+                .scale(0.8)
+                .next_to(self.g, UP)
+                .set_color_by_gradient(
+                    AS2700.G23_SHAMROCK, AS2700.G36_KIKUYU, AS2700.T14_MALACHITE
+                )
+            )
+        )
+        failsafe = 30
+        # context = Text("").set_color(RED).next_to(g, DOWN) # Commented out because I'm no longer debugging
+        while failsafe:
+            failsafe -= 1
+            root_vertex = self.dijkstra.advance(1, True)
+            if root_vertex is None:
+                break
+            # Update Return Vertexes
+            # self.add(context)
+
+            for this, ret_to in self.dijkstra.return_vertex.items():
+                if ret_to is None:
+                    continue
+                new_weight = self.dijkstra.vertex_weight[this]
+                if new_weight is None:
+                    raise Exception("Unexpected case : Vertex weight is None")
+                current_tex, weight, arrow = self.vertex_weights[this]
+
+                if weight == new_weight:
+                    continue
+                # Update the data linked to `this` vertex
+                new_arrow = self.arrow_at(this, ret_to)
+                self.vertex_weights[this] = (current_tex, new_weight, new_arrow)
+
+                new_weight = (
+                    MathTex(str(new_weight))
+                    .set_color(current_tex.get_color())
+                    .move_to(current_tex.get_center())
+                )
+
+                moving_dot = Dot(
+                    g.vertices[root_vertex].get_center(),
+                    color=LIGHT_PINK,
+                    radius=0.2,
+                    fill_opacity=1,
+                )
+
+                self.play(
+                    self.highlight_rectangle.animate.move_to(
+                        (new_weight.get_center() + self.g.vertices[this].get_center())
+                        / 2
+                    ),
+                    run_time=0.5,
+                )
+                if arrow is None:
+                    arrow_animation = Write(new_arrow)
+                else:
+                    arrow_animation = ReplacementTransform(arrow, new_arrow)
+                self.play(
+                    LaggedStart(
+                        moving_dot.animate.move_to(g.vertices[this].get_center()),
+                        arrow_animation,
+                        Transform(current_tex, new_weight),
+                        lag_ratio=0.6,
+                    ),
+                    run_time=1.5,
+                )
+                current_tex.become(new_weight)
+                self.remove(moving_dot)
+        # And playout the final scene of going from start to end
+        # Draw out the path needed
+        path = self.get_path_resolution_animation()
+        self.play(
+            LaggedStart(FadeOut(self.highlight_rectangle), *path, lag_ratio=0.6),
+            run_time=3,
+        )
+        self.wait()
+
+    def get_path_resolution_animation(self) -> List[ReplacementTransform]:
+        goal = self.dijkstra.target_vertex
+        if goal is None:
+            raise Exception("Unexpected case : Target vertex is None")
+        anims = []
+        while True:
+            return_vertex = self.dijkstra.return_vertex.get(goal)
+            if return_vertex is None:
+                break
+            _mathtex, val, old_arrow = self.vertex_weights[goal]
+            new_arrow = self.arrow_at(return_vertex, goal, False).set_color(
+                AS2700.B23_BRIGHT_BLUE
+            )
+            anims.append(ReplacementTransform(old_arrow, new_arrow))
+            self.vertex_weights[goal] = (
+                _mathtex,
+                val,
+                new_arrow,
+            )  # Update the object to properly reflec the scene's state
+            goal = return_vertex
+        anims.reverse()
+        return anims
+
+    def arrow_at(self, from_v: Vertex, to_v: Vertex, short: bool = True) -> Arrow:
+        start = self.dijkstra.graph.get_vertexes_layout()[from_v]
+        end = self.dijkstra.graph.get_vertexes_layout()[to_v]
+        if short:
+            end = np.array(end) + (np.array(start) - np.array(end)) * 0.65
+        else:
+            end = np.array(end)
+        return Arrow(start, end, color=RED_E, max_tip_length_to_length_ratio=0.8)
 
     def get_unique_edges(self) -> Set[Edge]:
         return unique_edges(self.dijkstra.graph.edges)

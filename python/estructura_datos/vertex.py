@@ -287,16 +287,18 @@ class Dijkstra:
         self.solution = self._advance()
         self.steps: int = 0
 
-    def advance(self, steps: int = 1, debug: bool = False):
+    def advance(self, steps: int = 1, debug: bool = False) -> Vertex | None:
         for _ in range(steps):
             self.steps += 1
-            if next(self.solution, None) is None:
-                break
+            step_result = next(self.solution, None)
+            if step_result is None:
+                return None
             if debug:
                 print(f"Debug Step: {self.steps}")
                 self.debug()
+        return step_result
 
-    def _advance(self) -> Generator[int, None, None]:
+    def _advance(self) -> Generator[Vertex, None, None]:
         self.shortest_path = None
         start_vertex = self.get_next_smallest()
         # vertex_queue = [start_vertex]
@@ -321,7 +323,7 @@ class Dijkstra:
                     )
                 else:
                     print("No changes???")
-                yield 0
+                yield start_vertex
             start_vertex = self.get_next_smallest()
         print(f"End of the line {self.steps}")
 
@@ -431,7 +433,6 @@ class Dijkstra:
 #     print("Advancing:")
 #     dijkstra.advance(5, True)
 
-
 # # main()
 # def main_2():
 #     map = GraphMap()
@@ -478,39 +479,39 @@ class Dijkstra:
 #     dijkstra.advance(15, True)
 
 
-# def main_1():
-#     # https://www.youtube.com/watch?v=EFg3u_E6eHU
-#     map = GraphMap()
-#     map.register_vertexes(
-#         [
-#             (Vertex(1), (0, 0)),
-#             (Vertex(3), (1, 2)),
-#             (Vertex(6), (1, -1)),
-#             (Vertex(5), (2, 1)),
-#             (Vertex(4), (3, 3)),
-#             (Vertex(7), (3, -1)),
-#             (Vertex(2), (4, 1)),
-#         ]
-#     )
-#     edges = [
-#         (3, 1, 3),
-#         (2, 1, 6),
-#         (2, 3, 6),
-#         (1, 3, 5),
-#         (3, 6, 5),
-#         (5, 6, 7),
-#         (6, 6, 2),
-#         (2, 5, 2),
-#         (4, 3, 4),
-#         (1, 4, 2),
-#         (2, 7, 2),
-#     ]
-#     for weight, _from, to in edges:
-#         map.define_edge(weight, _from, to, True)
+def main_1():
+    # https://www.youtube.com/watch?v=EFg3u_E6eHU
+    map = GraphMap()
+    map.register_vertexes(
+        [
+            (Vertex(1), (0, 0)),
+            (Vertex(3), (1, 2)),
+            (Vertex(6), (1, -1)),
+            (Vertex(5), (2, 1)),
+            (Vertex(4), (3, 3)),
+            (Vertex(7), (3, -1)),
+            (Vertex(2), (4, 1)),
+        ]
+    )
+    edges = [
+        (3, 1, 3),
+        (2, 1, 6),
+        (2, 3, 6),
+        (1, 3, 5),
+        (3, 6, 5),
+        (5, 6, 7),
+        (6, 6, 2),
+        (2, 5, 2),
+        (4, 3, 4),
+        (1, 4, 2),
+        (2, 7, 2),
+    ]
+    for weight, _from, to in edges:
+        map.define_edge(weight, _from, to, True)
 
-#     map.debug()
-#     Dijkstra.new(map, 1, 2).advance(30, True)
-#     print("Dijkstra at main_1()")
+    map.debug()
+    Dijkstra.new(map, 1, 2).advance(30, True)
+    print("Dijkstra at main_1()")
 
 
-# main_1()
+main_1()
