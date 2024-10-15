@@ -1,9 +1,29 @@
-from typing import Any, Callable, OrderedDict, Tuple
+from typing import Any, Callable, OrderedDict, Set, Tuple
 from manim import *
 from manim.typing import Point3D
 
 
-from vertex import Dijkstra, GraphMap, Vertex
+from vertex import Dijkstra, Edge, GraphMap, Vertex
+
+
+def unique_edges(edges: Set[Edge]) -> Set[Edge]:
+    """Definition of an Unique Edge:
+    We assume edges are bidirectional; so it means `Vertex(1) -> Vertex(2)` is the same as `Vertex(2) -> Vertex(1)`
+    Also assumes that the weight is the same for both edges.
+
+    # The implementation detail
+    compare the index, sorting the id in ascending order.
+    This means that for an edge as `Vertex(2) -> Vertex(1)` will be converted to `Vertex(1) -> Vertex(2)` and
+    then compared with the seen edges
+    """
+    seen = set()
+    for edge in edges:
+        if edge.from_v.id > edge.to_v.id:
+            edge = Edge(edge.weight, edge.to_v, edge.from_v)
+        if edge in seen:
+            continue
+        seen.add(edge)
+    return seen
 
 
 class Manim_Dijkstra(Scene):  # type: ignore
@@ -14,18 +34,23 @@ class Manim_Dijkstra(Scene):  # type: ignore
         self.steps: int = steps
         # TODO Undo debug settings
         config.frame_rate = 24
-        self.animate_drawing_weighted_edges = False  # Default: True
+        self.animate_drawing_weighted_edges = True  # Default: True
 
     def draw_weigthed_edges(self) -> Any:
         # Weights Setup: Get the midpoint between vertexes
         positions: OrderedDict[Tuple[Vertex, Vertex], Point3D] = OrderedDict()
-        for from_v, to_v in self.dijkstra.graph.get_edges():
+        for from_v, to_v in [
+            (edge.from_v, edge.to_v) for edge in unique_edges(self.dijkstra.graph.edges)
+        ]:
             pos1 = self.dijkstra.graph.get_vertex_position(from_v)
             pos2 = self.dijkstra.graph.get_vertex_position(to_v)
             pos = ((pos1[0] + pos2[0]) / 2, (pos1[1] + pos2[1]) / 2, 0.0)
             # Sort the vertex index
             if from_v.id > to_v.id:
                 from_v, to_v = to_v, from_v
+                raise ValueError(
+                    "UNREACHABLE CODE : The vertexes should've been sorted due to call of `unique_edges() which return edges in ascending order`"
+                )
             positions.update({(from_v, to_v): pos})
 
         # Instantiate Animations
@@ -48,11 +73,14 @@ class Manim_Dijkstra(Scene):  # type: ignore
 
         # Commit the Animations
         if self.animate_drawing_weighted_edges:
-            animations = [
-                AnimationGroup(FadeIn(rect), Create(anim))
-                for (rect, anim) in animations
-            ]
-            self.play(LaggedStart(*animations, lag_ratio=0.3), run_time=3)
+            rects = [FadeIn(rect) for rect, _ in animations]
+            anims = [Write(anim) for _, anim in animations]
+            
+            self.play(
+                AnimationGroup(
+                    LaggedStart(rects, lag_ratio=0.3), LaggedStart(anims, lag_ratio=.4), lag_ratio=0.4, run_time=4, rate=rate_functions.ease_in_cubic
+                ),
+            )
             del animations
         else:
             # Flatten the tuple
@@ -63,32 +91,36 @@ class Manim_Dijkstra(Scene):  # type: ignore
 
     def construct(self):
         vertices = self.dijkstra.graph.get_vertexes_ids()
-        edges = [(to_v, from_v) for from_v, to_v in self.dijkstra.graph.get_edges()]
+        unique_edges = self.get_unique_edges_vertexes()
         vertices_layout = self.dijkstra.graph.get_vertexes_layout()
 
         edge_config = {
             "stroke_width": 2,
-            "tip_config": {
-                "tip_shape": StealthTip,
-                "tip_length": 0.15,
-            },
-            (Vertex(1), Vertex(3)): {
-                "color": BLUE_E,
+            (Vertex(3), Vertex(1)): {
+                "stroke_width": 10.0,
+                "color": BLUE,
+                "tip_config": {"tip_length": 0.25, "tip_width": 0.25},
             },
         }
 
         g = Graph(
             vertices,
-            edges,
+            unique_edges,
             labels=True,
             layout=vertices_layout,
             edge_config=edge_config,
         ).scale(1)
-        
+
         self.camera.frame_center = g.get_center()
         self.play(Create(g))
         self.draw_weigthed_edges()
         self.wait()
+
+    def get_unique_edges(self) -> Set[Edge]:
+        return unique_edges(self.dijkstra.graph.edges)
+
+    def get_unique_edges_vertexes(self) -> Set[Tuple[Vertex, Vertex]]:
+        return set([(edge.from_v, edge.to_v) for edge in self.get_unique_edges()])
 
 
 def dijkstra_func_1() -> Tuple[Dijkstra, int]:
