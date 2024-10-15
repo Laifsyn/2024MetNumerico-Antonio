@@ -42,7 +42,7 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         # self.weights_labels: dict[Tuple[Vertex, Vertex], Tuple[Tex, Rectangle]] = dict()
         # TODO Undo debug settings
         config.frame_rate = 60
-        self.animate_drawing_weighted_edges = False  # Default: True
+        self.animate_drawing_weighted_edges = True  # Default: True
         self.animate_drawing_node_weights = self.animate_drawing_weighted_edges
         self.animate_path_resolution = self.animate_drawing_weighted_edges
 
