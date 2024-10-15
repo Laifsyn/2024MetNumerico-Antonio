@@ -41,7 +41,7 @@ class Manim_Dijkstra(Scene):  # type: ignore
 
         # self.weights_labels: dict[Tuple[Vertex, Vertex], Tuple[Tex, Rectangle]] = dict()
         # TODO Undo debug settings
-        config.frame_rate = 24
+        config.frame_rate = 60
         self.animate_drawing_weighted_edges = True  # Default: True
         self.animate_drawing_node_weights = self.animate_drawing_weighted_edges
 
@@ -125,16 +125,6 @@ class Manim_Dijkstra(Scene):  # type: ignore
         else:
             anims = [tex for tex, *_ in self.vertex_weights.values()]
             self.add(*anims)
-        start_vertex = self.dijkstra.get_start_vertex()
-        label = self.vertex_weights[start_vertex][0]
-        self.play(
-            Write(
-                self.highlight_rectangle.move_to(
-                    (self.g.vertices[start_vertex].get_center() + label.get_center())
-                    / 2
-                )
-            )
-        )
 
     def construct(self):
         # region: SETUP graph
@@ -183,6 +173,18 @@ class Manim_Dijkstra(Scene):  # type: ignore
                 )
             )
         )
+
+        start_vertex = self.dijkstra.get_start_vertex()
+        label = self.vertex_weights[start_vertex][0]
+        self.play(
+            Write(
+                self.highlight_rectangle.move_to(
+                    (self.g.vertices[start_vertex].get_center() + label.get_center())
+                    / 2
+                )
+            )
+        )
+
         failsafe = 30
         # context = Text("").set_color(RED).next_to(g, DOWN) # Commented out because I'm no longer debugging
         while failsafe:
@@ -190,8 +192,6 @@ class Manim_Dijkstra(Scene):  # type: ignore
             root_vertex = self.dijkstra.advance(1, True)
             if root_vertex is None:
                 break
-            # Update Return Vertexes
-            # self.add(context)
 
             for this, ret_to in self.dijkstra.return_vertex.items():
                 if ret_to is None:
@@ -225,7 +225,7 @@ class Manim_Dijkstra(Scene):  # type: ignore
                         (new_weight.get_center() + self.g.vertices[this].get_center())
                         / 2
                     ),
-                    run_time=0.5,
+                    run_time=1,
                 )
                 if arrow is None:
                     arrow_animation = Write(new_arrow)
@@ -241,13 +241,13 @@ class Manim_Dijkstra(Scene):  # type: ignore
                     run_time=1.5,
                 )
                 current_tex.become(new_weight)
-                self.remove(moving_dot)
+                self.play(FadeOut(moving_dot), run_time=0.5)
         # And playout the final scene of going from start to end
         # Draw out the path needed
         path = self.get_path_resolution_animation()
         self.play(
             LaggedStart(FadeOut(self.highlight_rectangle), *path, lag_ratio=0.6),
-            run_time=3,
+            run_time=4,
         )
         self.wait()
 
