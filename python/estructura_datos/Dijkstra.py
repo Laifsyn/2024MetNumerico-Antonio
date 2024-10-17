@@ -40,7 +40,7 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         self.g: Graph
 
         # TODO Undo debug settings
-        config.frame_rate = 24
+        config.frame_rate = 60
         self.animate_drawing_weighted_edges = True  # Default: True
         self.animate_drawing_node_weights = self.animate_drawing_weighted_edges
         self.animate_path_resolution = self.animate_drawing_weighted_edges
@@ -199,6 +199,13 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         cleanup_rects: List[Rectangle] = []
 
         while failsafe > 0:
+            # Deactivate Highlight
+            activated_highlighter = self.highlight_rectangle.copy()
+            self.highlight_rectangle.become(
+                self.highlight_rectangle.set_stroke(
+                    GRAY_B, self.highlight_rectangle.get_stroke_width(), opacity=0.5
+                )
+            )
             if next_vertex is None:
                 break
             adjacent_vertexes = self.dijkstra.get_adjacent(next_vertex)
@@ -254,11 +261,10 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
                     radius=0.2,
                     fill_opacity=1,
                 )
+                activated_highlighter.move_to(self.node_label_center(adj_vertex))
                 if self.animate_path_resolution:
                     self.play(
-                        self.highlight_rectangle.animate.move_to(
-                            self.node_label_center(adj_vertex)
-                        ),
+                        self.highlight_rectangle.animate.become(activated_highlighter),
                         run_time=0.7,
                     )
                     self.play(
