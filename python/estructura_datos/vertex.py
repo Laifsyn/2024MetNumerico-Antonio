@@ -259,44 +259,59 @@ class Dijkstra:
         self.solution = self._advance()
         self.steps: int = 0
 
-    def advance(self, steps: int = 1, debug: bool = False) -> Vertex | None:
+    def advance(
+        self, steps: int = 1, debug: bool = False
+    ) -> Tuple[Vertex | None, List[Tuple[Vertex, EdgeWeight]]]:
+        step_result: Tuple[Vertex | None, List[Tuple[Vertex, EdgeWeight]]] = (None, [])
         for _ in range(steps):
             self.steps += 1
-            step_result = next(self.solution, None)
+            step_result = next(self.solution, (None, []))
             if step_result is None:
-                return None
+                return (None, [])
             if debug:
                 print(f"Debug Step: {self.steps}")
                 self.debug()
         return step_result
 
-    def _advance(self) -> Generator[Vertex, None, None]:
+    def _advance(
+        self,
+    ) -> Generator[Tuple[Vertex, List[Tuple[Vertex, EdgeWeight]]], None, None]:
         self.shortest_path = None
-        start_vertex = self.get_next_smallest()
+        smallest_vertex = self.get_next_smallest()
+        if smallest_vertex is None:
+            raise ValueError("No smallest vertex found")
         # vertex_queue = [start_vertex]
         while True:
-            neighbour_nodes = self.get_adjacent(start_vertex)
-            # Mark as explored
-            start_vertex.explore()
-            if neighbour_nodes is None:
+            if smallest_vertex is None:
                 break
+            # Mark as explored
+            neighbour_nodes = self.get_adjacent(smallest_vertex)
+            smallest_vertex.explore()
+            src_vertex = smallest_vertex
+
+            if neighbour_nodes is None:
+                smallest_vertex = self.get_next_smallest()
+                continue
 
             # neighbour, weight_to_neighbour
             for neighbour, weight_to in neighbour_nodes:
                 weight_till_neighbour = self.vertex_weight[neighbour]
-                this_weight = self.get_weight(start_vertex)
+                this_weight = self.get_weight(src_vertex)
                 if (weight_till_neighbour) is None or (
                     this_weight + weight_to < weight_till_neighbour
                 ):
                     self.vertex_weight[neighbour] = this_weight + weight_to
-                    self.return_vertex[neighbour] = start_vertex
+                    self.return_vertex[neighbour] = src_vertex
                     print(
-                        f"Updating:{self.vertex_weight[neighbour]} <= {this_weight} + {weight_to}"
+                        f"Updating:(ret:{src_vertex}<-{str(neighbour)}){self.vertex_weight[neighbour]} <- {this_weight} + {weight_to} "
                     )
                 else:
                     print("No changes???")
-                yield start_vertex
-            start_vertex = self.get_next_smallest()
+                yield (
+                    src_vertex,
+                    neighbour_nodes,
+                )
+            smallest_vertex = self.get_next_smallest()
         print(f"End of the line {self.steps}")
 
     def get_start_vertex(self) -> Vertex:
@@ -305,25 +320,25 @@ class Dijkstra:
                 return v
         raise ValueError("No starting vertex found")
 
-    def get_next_smallest(self) -> Vertex:
+    def get_next_smallest(self) -> Vertex | None:
         # Get the next smallest vertex that isn't explored
 
-        smallest_vertex = []
+        smallest_vertex: List[Tuple[Vertex, WeightSoFar]] = []
         for vertex, weight in self.vertex_weight.items():
             if weight is None:
                 continue
             if vertex.status == ExplorationStatus.EXPLORED:
                 continue
             # Skip Node Weights bigger than target's Node's Weight
-            targets_weight = self.vertex_weight[self.target_vertex]
-            if targets_weight is not None and weight > targets_weight:
-                continue
+            # targets_weight = self.vertex_weight[self.target_vertex]
+            # if targets_weight is not None and weight > targets_weight:
+            #     continue
             smallest_vertex.append((vertex, weight))
+        print(f"Smallest Vertex: {[str(v) for v, w in smallest_vertex]}")
         smallest_vertex.sort(key=lambda x: x[1])
-
         for vertex, _weight in smallest_vertex:
             return vertex
-        raise ValueError("No starting vertex found")
+        return None
 
     def get_weight(self, vertex: Vertex) -> WeightSoFar:
         """For the checked alternative, directly call the self.vertex_weight[vertex]
@@ -458,4 +473,4 @@ def main_2() -> None:
     dijkstra.advance(steps, True)
 
 
-main_2()
+# main_2()

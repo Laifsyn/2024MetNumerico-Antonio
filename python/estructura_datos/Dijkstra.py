@@ -1,8 +1,8 @@
-from typing import Any, Callable, OrderedDict, Set, Tuple
+from typing import Any, Callable, Optional, OrderedDict, Set, Tuple
 from manim import *
 from manim.typing import Point3D
 
-from vertex import Dijkstra, Edge, GraphMap, Vertex
+from vertex import Dijkstra, Edge, EdgeWeight, GraphMap, Vertex
 
 
 def unique_edges(edges: Set[Edge]) -> Set[Edge]:
@@ -41,7 +41,7 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
 
         # self.weights_labels: dict[Tuple[Vertex, Vertex], Tuple[Tex, Rectangle]] = dict()
         # TODO Undo debug settings
-        config.frame_rate = 60
+        config.frame_rate = 24
         self.animate_drawing_weighted_edges = True  # Default: True
         self.animate_drawing_node_weights = self.animate_drawing_weighted_edges
         self.animate_path_resolution = self.animate_drawing_weighted_edges
@@ -92,9 +92,9 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
                     LaggedStart(anims, lag_ratio=0.4),
                     LaggedStart(rects, lag_ratio=0.3),
                     lag_ratio=0.4,
-                    rate=rate_functions.ease_in_cubic,
+                    rate=rate_functions.not_quite_there,
                 ),
-                run_time=4.5,
+                run_time=2.5,
             )
             [anim.animate.set_z_index(10) for _, anim in animations]
             del animations
@@ -167,9 +167,9 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
             self.camera.frame_width = self.camera.frame_height * config.aspect_ratio
         self.camera.frame_center = g.get_center()
 
-        self.play(Write(g), run_time=6)
+        self.play(Write(g), run_time=4)
         self.draw_weigthed_edges()
-        self.wait()
+        self.wait(0.5)
         # endregion: SETUP
 
         self.play(
@@ -189,43 +189,85 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         label = self.vertex_weights[start_vertex][0]
         self.play(
             Write(
-                self.highlight_rectangle.move_to(
-                    (self.g.vertices[start_vertex].get_center() + label.get_center())
-                    / 2
-                )
+                self.highlight_rectangle.move_to(self.node_label_center(start_vertex))
             )
         )
 
         failsafe = self.steps
+        failsafe = 16
         # context = Text("").set_color(RED).next_to(g, DOWN) # Commented out because I'm no longer debugging
-        while failsafe:
-            failsafe -= 1
-            root_vertex = self.dijkstra.advance(1, True)
-            if root_vertex is None:
-                break
+        next_vertex = self.dijkstra.get_start_vertex()
+        cleanup = None
+        cleanup_rects: List[Rectangle] = []
 
-            for this, ret_to in self.dijkstra.return_vertex.items():
-                if ret_to is None:
+        while failsafe > 0:
+            print("\nFAILSAFE::", failsafe)
+            if next_vertex is None:
+                break
+            adjacent_vertexes = self.dijkstra.get_adjacent(next_vertex)
+            if adjacent_vertexes is None:
+                adjacent_vertexes = []
+            print(
+                f"Adjacent Vertexes: {[str(adj) for adj, _weight in adjacent_vertexes]}"
+            )
+            adj_len = len(adjacent_vertexes)
+            root, adjacent_vertexes = self.dijkstra.advance(
+                adj_len if adj_len else 1, False
+            )
+            print(
+                f"Adjacent Vertexes: {[str(adj) for adj, _weight in adjacent_vertexes]} (Root: {root})"
+            )
+            failsafe -= 1
+
+            print(
+                f"Root Vertex: {next_vertex} ({self.dijkstra.steps}), next:{self.dijkstra.get_next_smallest()}"
+            )
+
+            cleanup, root, rect = self.mark_adjacent_vertexes(
+                root if root is not None else next_vertex, adjacent_vertexes
+            )
+            cleanup_rects.append(rect)
+
+            next_vertex = self.dijkstra.get_next_smallest()
+            print(f"Next Vertex: {next_vertex} ({self.dijkstra.steps})")
+
+            for adj_vertex in [adj for adj, _weight in adjacent_vertexes]:
+                if root is None:
+                    raise Exception("Unexpected case : Unreachable Code")
                     continue
-                new_weight = self.dijkstra.vertex_weight[this]
+
+                new_weight = self.dijkstra.vertex_weight[adj_vertex]
                 if new_weight is None:
                     raise Exception("Unexpected case : Vertex weight is None")
-                current_tex, weight, arrow = self.vertex_weights[this]
+                current_tex, weight, arrow = self.vertex_weights[adj_vertex]
+                print(
+                    f"Retrieving arrow for {adj_vertex} -> {root} when weight is {weight} and new weight is {new_weight}"
+                )
 
-                if weight == new_weight:
-                    continue
-                # Update the data linked to `this` vertex
-                new_arrow = self.arrow_at(this, ret_to)
-                self.vertex_weights[this] = (current_tex, new_weight, new_arrow)
+                # If the weight is different to the one stored, update the weight and Arrow
+                if weight is not new_weight:
+                    # Update the data linked to `this` vertex
+                    new_arrow = self.arrow_at(adj_vertex, root)
+                    self.vertex_weights[adj_vertex] = (
+                        current_tex,
+                        new_weight,
+                        new_arrow,
+                    )
+                    if arrow is None:
+                        arrow_animation = Write(new_arrow.set_color(MAROON_D))
+                    else:
+                        arrow_animation = ReplacementTransform(arrow, new_arrow)
+                else:
+                    arrow_animation = Wait(run_time=0)
 
-                new_weight = (
+                weight_label = (
                     MathTex(str(new_weight))
                     .set_color(current_tex.get_color())
                     .move_to(current_tex.get_center())
                 )
 
                 moving_dot = Dot(
-                    g.vertices[root_vertex].get_center(),
+                    g.vertices[root].get_center(),
                     color=LIGHT_PINK,
                     radius=0.2,
                     fill_opacity=1,
@@ -233,92 +275,149 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
                 if self.animate_path_resolution:
                     self.play(
                         self.highlight_rectangle.animate.move_to(
-                            (
-                                new_weight.get_center()
-                                + self.g.vertices[this].get_center()
-                            )
-                            / 2
+                            self.node_label_center(adj_vertex)
                         ),
-                        run_time=1,
+                        run_time=0.7,
                     )
-                if arrow is None:
-                    arrow_animation = Write(new_arrow)
-                else:
-                    arrow_animation = ReplacementTransform(arrow, new_arrow)
-                if self.animate_path_resolution:
                     self.play(
                         LaggedStart(
-                            moving_dot.animate.move_to(g.vertices[this].get_center()),
+                            moving_dot.animate.move_to(
+                                g.vertices[adj_vertex].get_center()
+                            ),
                             arrow_animation,
-                            Transform(current_tex, new_weight),
+                            Transform(current_tex, weight_label),
                             lag_ratio=0.6,
+                            run_time=1.2,
                         ),
-                        run_time=1.5,
                     )
-                    current_tex.become(new_weight)
+                    current_tex.become(weight_label)
                     self.play(FadeOut(moving_dot), run_time=0.5)
-                if not self.animate_path_resolution:
-                    current_tex.become(new_weight)
-                    moving_dot.move_to(g.vertices[this].get_center())
-                    if arrow is None:
-                        new_arrow = self.add(arrow_animation.mobject)
-                    else:
-                        arrow.become(new_arrow),
+                else:
+                    current_tex.become(weight_label)
+                    moving_dot.move_to(g.vertices[adj_vertex].get_center())
+                    (
+                        self.add(arrow_animation.mobject)
+                        if arrow is None
+                        else arrow.become(new_arrow)
+                    )
+                    del new_arrow
                     self.add(
                         self.highlight_rectangle.move_to(
-                            (
-                                new_weight.get_center()
-                                + self.g.vertices[this].get_center()
-                            )
-                            / 2
+                            self.node_label_center(adj_vertex)
                         )
                     )
+            cleanup()
+
         # And playout the final scene of going from start to end
         # Draw out the path needed
         path = self.get_path_resolution_animation()
+        # path = []  # TODO undo comment
         self.play(
-            LaggedStart(FadeOut(self.highlight_rectangle), *path, lag_ratio=0.6),
+            LaggedStart(
+                FadeOut(self.highlight_rectangle),
+                [FadeOut(rect) for rect in reversed(cleanup_rects)],
+                lag_ratio=0.3,
+            ),
+            run_time=2,
+        )
+        self.play(
+            LaggedStart(
+                *path,
+                lag_ratio=0.6,
+            ),
             run_time=4,
         )
-        self.wait(1)
 
+        self.wait(1)
         self.move_camera(phi=60 * DEGREES, theta=-45 * DEGREES, run_time=3)
-        self.wait(0.5)
-        self.move_camera(phi=105 * DEGREES, theta=15 * DEGREES, run_time=3)
-        self.wait(0.5)
+        # self.wait(0.5)
+        # self.move_camera(phi=105 * DEGREES, theta=15 * DEGREES, run_time=3)
+        # self.wait(0.5)
         self.move_camera(phi=165 * DEGREES, theta=60 * DEGREES, run_time=3)
         self.wait(0.5)
-        self.move_camera(phi=210 * DEGREES, theta=135 * DEGREES, run_time=3)
-        self.wait(0.5)
-        self.move_camera(phi=235 * DEGREES, theta=220 * DEGREES, run_time=3)
-        self.wait(0.5)
-        self.move_camera(phi=295 * DEGREES, theta=335 * DEGREES, run_time=3)
-        self.wait(0.5)
+        # self.move_camera(phi=210 * DEGREES, theta=135 * DEGREES, run_time=2)
+        # self.wait(0.5)
+        # self.move_camera(phi=235 * DEGREES, theta=220 * DEGREES, run_time=3)
+        # self.wait(0.5)
+        # self.move_camera(phi=295 * DEGREES, theta=335 * DEGREES, run_time=3)
+        # self.wait(0.5)
 
-        self.move_camera(phi=360 * DEGREES, theta=270 * DEGREES, run_time=3)
+        self.move_camera(
+            phi=360 * DEGREES,
+            theta=270 * DEGREES,
+            run_time=2,
+            rate=rate_functions.wiggle,
+        )
         self.wait(2)
 
-    def get_path_resolution_animation(self) -> List[ReplacementTransform]:
-        goal = self.dijkstra.target_vertex
-        if goal is None:
-            raise Exception("Unexpected case : Target vertex is None")
+    def node_label_center(self, v: Vertex) -> Point3D:
+        label = self.vertex_weights[v][0]
+        return (self.g.vertices[v].get_center() + label.get_center()) / 2
+
+    # Returns a CleanUp Lambda function to undo relevant animations
+    def mark_adjacent_vertexes(
+        self, src: Vertex, adjacents_with_weight: List[Tuple[Vertex, EdgeWeight]]
+    ) -> Tuple[Callable, Vertex, Rectangle]:
+        src_vertex: LabeledDot | Mobject = self.g.vertices[src]
+        src_vertex_original: LabeledDot | Mobject = src_vertex.copy()
+        adjacents = [adj for adj, _ in adjacents_with_weight]
+
+        rects: List[Rectangle] = []
+        base_rect = (
+            Rectangle(
+                PINK,
+                self.highlight_rectangle.width * 0.9,
+                self.highlight_rectangle.height * 0.9,
+            )
+            .move_to(self.node_label_center(src))
+            .set_color_by_gradient(PINK, AS2700.B21_ULTRAMARINE)
+        )
+
+        [rects.append(base_rect.copy()) for _ in adjacents]
+        self.play(
+            FadeIn(base_rect.set_color(GREEN_C)),
+            src_vertex.animate.set_fill(RED),
+            run_time=0.5,
+        )
         anims = []
-        while True:
-            return_vertex = self.dijkstra.return_vertex.get(goal)
-            if return_vertex is None:
+        for rect, adj_vertex in zip(rects, adjacents):
+            anims.append(rect.animate.move_to(self.node_label_center(adj_vertex)))
+        self.play(AnimationGroup(anims), run_time=1.0)
+
+        return (
+            lambda: self.play(
+                src_vertex.animate.become(src_vertex_original),
+                base_rect.animate.set_color(PINK),
+                *[FadeOut(rect) for rect in rects],
+                run_time=0.5,
+            ),
+            src,
+            base_rect,
+        )
+
+    def get_path_resolution_animation(self) -> List[ReplacementTransform]:
+        v_start = self.dijkstra.target_vertex
+        if v_start is None:
+            raise Exception("Unexpected case : Target vertex is None")
+        # TODO: Remove Target Goal (self.dijkstra.target_vertex)
+        # Reason: Because the algorithm is intended to build a Tree-like graph with the fewest weights
+        anims: List[ReplacementTransform] = []
+        for v_start, v_to_source in self.dijkstra.return_vertex.items():
+            if v_to_source is None:
                 break
-            _mathtex, val, old_arrow = self.vertex_weights[goal]
-            new_arrow = self.arrow_at(return_vertex, goal, False).set_color(
-                AS2700.B23_BRIGHT_BLUE
+            _mathtex, val, old_arrow = self.vertex_weights[v_start]
+            new_arrow = (
+                self.arrow_at(v_to_source, v_start, False)
+                .set_color(AS2700.B23_BRIGHT_BLUE)
+                .set_stroke(AS2700.B23_BRIGHT_BLUE, 12)
             )
             anims.append(ReplacementTransform(old_arrow, new_arrow))
-            self.vertex_weights[goal] = (
+            self.vertex_weights[v_start] = (
                 _mathtex,
                 val,
                 new_arrow,
             )  # Update the object to properly reflec the scene's state
-            goal = return_vertex
-        anims.reverse()
+            v_start = v_to_source
         return anims
 
     def arrow_at(self, from_v: Vertex, to_v: Vertex, short: bool = True) -> Arrow:
