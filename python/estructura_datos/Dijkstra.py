@@ -329,12 +329,12 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         # self.move_camera(phi=295 * DEGREES, theta=335 * DEGREES, run_time=3)
         # self.wait(0.5)
 
-        self.move_camera(
-            phi=360 * DEGREES,
-            theta=270 * DEGREES,
-            run_time=2,
-            rate=rate_functions.wiggle,
-        )
+        # self.move_camera(
+        #     phi=360 * DEGREES,
+        #     theta=270 * DEGREES,
+        #     run_time=2,
+        #     rate=rate_functions.wiggle,
+        # )
         self.wait(2)
 
     def node_label_center(self, v: Vertex) -> Point3D:
@@ -362,6 +362,9 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
 
         [rects.append(base_rect.copy()) for _ in adjacents]
         self.play(
+            self.highlight_rectangle.animate.move_to(
+                self.node_label_center(src)
+            ).set_opacity(0.1, False),
             FadeIn(base_rect.set_color(GREEN_C)),
             src_vertex.animate.set_fill(RED),
             run_time=0.5,
@@ -435,7 +438,7 @@ def dijkstra_func_1() -> Tuple[Dijkstra, int]:
         (Vertex(7), (3, -1.2, -1.5)),
         (Vertex(2), (4, 0, 1.2)),
     ]
-    vertexes = [(v, (x * 1, y * 1, z * 1)) for v, (x, y, z) in vertexes]
+    vertexes = [(v, (x * 2, y * 2, z * 2)) for v, (x, y, z) in vertexes]
     map.register_vertexes(vertexes)
 
     edges = [
@@ -482,7 +485,7 @@ def dijkstra_func_2() -> Tuple[Dijkstra, int]:
         (Vertex(11), (8.5, -2.5, 1)),  # K
         (Vertex(12), (8.5, 0.5, 1)),  # L
     ]
-    vertexes = [(v, (x * 2, y * 2, z * 2)) for v, (x, y, z) in vertexes]
+    vertexes = [(v, (x * 1.2, y * 1.2, z * 1.2)) for v, (x, y, z) in vertexes]
     map.register_vertexes(vertexes)
 
     edges = [
