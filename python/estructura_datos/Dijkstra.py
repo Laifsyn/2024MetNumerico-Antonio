@@ -32,14 +32,13 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         self.dijkstra: Dijkstra = dijkstra
         self.steps: int = steps
         # Holds the Mobjects of the vertexes and their weights
-        # TODO Consider giving it a more fitting name. This has been working as a sort of Stack flow
+        # TODO Consider giving it a more fitting name. This has been used as a sort of Data registry
         self.vertex_weights: Dict[Vertex, Tuple[MathTex, int | None, Arrow | None]] = (
             dict()
         )
         self.highlight_rectangle = Rectangle(TEAL_D, 1.5, 1.5).set_z_index(1)
         self.g: Graph
 
-        # self.weights_labels: dict[Tuple[Vertex, Vertex], Tuple[Tex, Rectangle]] = dict()
         # TODO Undo debug settings
         config.frame_rate = 24
         self.animate_drawing_weighted_edges = True  # Default: True
@@ -47,7 +46,7 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         self.animate_path_resolution = self.animate_drawing_weighted_edges
 
     def draw_weigthed_edges(self) -> None:
-        # Weights Setup: Get the midpoint between vertexes
+        # Weight's Setup: Get the midpoint between vertexes
         positions: OrderedDict[Tuple[Vertex, Vertex], Point3D] = OrderedDict()
         for from_v, to_v in [
             (edge.from_v, edge.to_v) for edge in unique_edges(self.dijkstra.graph.edges)
@@ -195,41 +194,27 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
 
         failsafe = self.steps
         failsafe = 16
-        # context = Text("").set_color(RED).next_to(g, DOWN) # Commented out because I'm no longer debugging
         next_vertex = self.dijkstra.get_start_vertex()
         cleanup = None
         cleanup_rects: List[Rectangle] = []
 
         while failsafe > 0:
-            print("\nFAILSAFE::", failsafe)
             if next_vertex is None:
                 break
             adjacent_vertexes = self.dijkstra.get_adjacent(next_vertex)
             if adjacent_vertexes is None:
                 adjacent_vertexes = []
-            print(
-                f"Adjacent Vertexes: {[str(adj) for adj, _weight in adjacent_vertexes]}"
-            )
             adj_len = len(adjacent_vertexes)
             root, adjacent_vertexes = self.dijkstra.advance(
                 adj_len if adj_len else 1, False
             )
-            print(
-                f"Adjacent Vertexes: {[str(adj) for adj, _weight in adjacent_vertexes]} (Root: {root})"
-            )
             failsafe -= 1
-
-            print(
-                f"Root Vertex: {next_vertex} ({self.dijkstra.steps}), next:{self.dijkstra.get_next_smallest()}"
-            )
-
             cleanup, root, rect = self.mark_adjacent_vertexes(
                 root if root is not None else next_vertex, adjacent_vertexes
             )
             cleanup_rects.append(rect)
 
             next_vertex = self.dijkstra.get_next_smallest()
-            print(f"Next Vertex: {next_vertex} ({self.dijkstra.steps})")
 
             for adj_vertex in [adj for adj, _weight in adjacent_vertexes]:
                 if root is None:
@@ -240,9 +225,6 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
                 if new_weight is None:
                     raise Exception("Unexpected case : Vertex weight is None")
                 current_tex, weight, arrow = self.vertex_weights[adj_vertex]
-                print(
-                    f"Retrieving arrow for {adj_vertex} -> {root} when weight is {weight} and new weight is {new_weight}"
-                )
 
                 # If the weight is different to the one stored, update the weight and Arrow
                 if weight is not new_weight:
@@ -311,7 +293,6 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         # And playout the final scene of going from start to end
         # Draw out the path needed
         path = self.get_path_resolution_animation()
-        # path = []  # TODO undo comment
         self.play(
             LaggedStart(
                 FadeOut(self.highlight_rectangle),
@@ -399,8 +380,6 @@ class Manim_Dijkstra(ThreeDScene):  # type: ignore
         v_start = self.dijkstra.target_vertex
         if v_start is None:
             raise Exception("Unexpected case : Target vertex is None")
-        # TODO: Remove Target Goal (self.dijkstra.target_vertex)
-        # Reason: Because the algorithm is intended to build a Tree-like graph with the fewest weights
         anims: List[ReplacementTransform] = []
         for v_start, v_to_source in self.dijkstra.return_vertex.items():
             if v_to_source is None:
@@ -469,7 +448,6 @@ def dijkstra_func_1() -> Tuple[Dijkstra, int]:
     for weight, _from, to in edges:
         map.define_edge(weight, _from, to, True)
 
-    # map.debug()
     dijkstra = Dijkstra.new(map, 1, 2)
     steps = 300  # Some arbitrary step amount
     if dijkstra is None:
@@ -524,7 +502,6 @@ def dijkstra_func_2() -> Tuple[Dijkstra, int]:
     for weight, _from, to in edges:
         map.define_edge(weight, _from, to, True)
 
-    # map.debug()
     dijkstra = Dijkstra.new(map, 19, 5)
     steps = 500  # Some arbitrary step amount
     if dijkstra is None:

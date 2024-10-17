@@ -302,11 +302,6 @@ class Dijkstra:
                 ):
                     self.vertex_weight[neighbour] = this_weight + weight_to
                     self.return_vertex[neighbour] = src_vertex
-                    print(
-                        f"Updating:(ret:{src_vertex}<-{str(neighbour)}){self.vertex_weight[neighbour]} <- {this_weight} + {weight_to} "
-                    )
-                else:
-                    print("No changes???")
                 yield (
                     src_vertex,
                     neighbour_nodes,
@@ -334,7 +329,6 @@ class Dijkstra:
             # if targets_weight is not None and weight > targets_weight:
             #     continue
             smallest_vertex.append((vertex, weight))
-        print(f"Smallest Vertex: {[str(v) for v, w in smallest_vertex]}")
         smallest_vertex.sort(key=lambda x: x[1])
         for vertex, _weight in smallest_vertex:
             return vertex
