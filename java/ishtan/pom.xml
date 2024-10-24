@@ -19,7 +19,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.13.2</version> <!-- Le' me just bump up the version of this to silence dependabot (297) miércoles, 23 octubre 2024 -->
       <scope>test</scope>
     </dependency>
   </dependencies>
