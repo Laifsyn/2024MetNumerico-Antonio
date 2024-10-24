@@ -1,4 +1,4 @@
-package ii_2024.met_numerico.sistema_ecuacion;
+package ii_2024.met_numerico.pry2_sistema_ecuacion;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package ii_2024.met_numerico.sistema_ecuacion;
+package ii_2024.met_numerico.pry2_sistema_ecuacion;
 
 // Nota: No he pensado muy a detalle las implicaciones de usar entre `Double[]` o `double[]`
 public final record Ecuacion(Double[] coeficientes, double resultado, int variables) {
