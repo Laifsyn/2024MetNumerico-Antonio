@@ -13,13 +13,11 @@ import ii_2024.met_numerico.pry3_Regresion.InputType;
 
 public class TableInput {
     public static void main(String[] args) {
-        var selector = new SelectorRegression();
-        var table = new TableInput(selector);
+        var table = new TableInput(new SelectorRegression());
 
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
-        frame.add(selector.as_JPanel());
         frame.add(table.as_JPanel());
         frame.pack();
         frame.setVisible(true);
@@ -110,7 +108,7 @@ public class TableInput {
     public JPanel as_JPanel() {
         JScrollPane scroll_pane = new JScrollPane(this.table);
         scroll_pane.setMaximumSize(new Dimension(350, 175));
-
+        this.selector.addActionListener(_ -> notify_model_listeners());
         this.table.getModel().addTableModelListener((_ingored) -> {
             // Actualizar totales cuando el modelo de la tabla cambie
             tally_totals();
@@ -119,9 +117,10 @@ public class TableInput {
         });
 
         // Definir botones y eventos
-        JButton push_row, pop_row;
+        final JButton push_row, pop_row, blankize_table;
         push_row = new JButton("Agregar Fila");
         pop_row = new JButton("Eliminar Fila");
+        blankize_table = new JButton("Vaciar Tabla");
 
         // Definir la acción para agregar fila
         push_row.addActionListener((ActionEvent e) -> {
@@ -140,6 +139,15 @@ public class TableInput {
             for (int i = 0; i < model.getColumnCount(); i++)
                 popped[i] = model.getValueAt(model.getRowCount() - 1, i);
             model.removeRow(model.getRowCount() - 1);
+        });
+        blankize_table.addActionListener( e -> {
+            DefaultTableModel model = (DefaultTableModel) this.table.getModel();
+            for (int i = 0; i < model.getRowCount(); i++) {
+                for (int j = 0; j < model.getColumnCount(); j++) {
+                    model.setValueAt("", i, j);
+                }
+            }
+
         });
 
         // Definir Layouts
@@ -184,8 +192,11 @@ public class TableInput {
         buttons.add(push_row);
         buttons.add(Box.createRigidArea(new Dimension(20, 0)));
         buttons.add(pop_row);
+        buttons.add(Box.createRigidArea(new Dimension(20, 0)));
+        buttons.add(blankize_table);
 
         // Añadir elementos al panel
+        pane.add(this.selector.as_JPanel());
         pane.add(scroll_pane);
         pane.add(Box.createRigidArea(new Dimension(20, 10)));
         pane.add(totales);
@@ -286,7 +297,7 @@ public class TableInput {
     }
 
     public enum Variables {
-        Y(0), X(1), X2(3);
+        Y(0), X(1), X2(2);
 
         private int value;
 
@@ -294,7 +305,7 @@ public class TableInput {
             this.value = value;
         }
 
-        private int getValue() {
+        public int getValue() {
             return this.value;
         }
     }
