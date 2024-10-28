@@ -2,6 +2,11 @@
 
 **Due:** October 27, 2024, 11:59 PM
 
+## Showcase
+![Regresión Lineal en Java](Java_Lineal.png)
+![Regresión Polinomial en Java](Java_poly.png)
+![Regresión Multilineal en Java](Java_multiline.png)
+![Regresión Multilineal en Python](Python_poly.png)
 
 El objetivo de esta tarea es que los estudiantes apliquen los conceptos de métodos numéricos para la resolución de problemas de Ajuste de Curvas (Regresión), utilizando los lenguajes de programación Java y Python. Los estudiantes deben implementar los métodos de Regresión Lineal, Regresión Lineal Múltiple y Regresión Polinomial.
 
