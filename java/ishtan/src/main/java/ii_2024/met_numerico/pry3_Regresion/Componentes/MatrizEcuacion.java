@@ -37,7 +37,7 @@ public class MatrizEcuacion {
 
     }
 
-    static void smart_pack(JFrame frame) {
+    public static void smart_pack(JFrame frame) {
         final int offset = 60;
         Dimension current_size = frame.getSize();
         Dimension packed_size = frame.getPreferredSize();
@@ -49,7 +49,7 @@ public class MatrizEcuacion {
 
     private final JPanel matriz_panel = new JPanel();
 
-    MatrizEcuacion() {
+    public MatrizEcuacion() {
 
     }
 
