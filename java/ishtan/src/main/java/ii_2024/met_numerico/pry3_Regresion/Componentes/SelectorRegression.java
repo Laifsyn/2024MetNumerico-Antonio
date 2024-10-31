@@ -39,9 +39,9 @@ public class SelectorRegression {
         bg.add(btn_ln_mult);
 
         // Registrar eventos
-        btn_lineal.addActionListener(_a -> notify_listeners(InputType.Lineal));
-        btn_poly.addActionListener(_ -> notify_listeners(InputType.Polinomial));
-        btn_ln_mult.addActionListener(_ -> notify_listeners(InputType.LinealMultiple));
+        btn_lineal.addActionListener(_ignored -> notify_listeners(InputType.Lineal));
+        btn_poly.addActionListener(_ignored -> notify_listeners(InputType.Polinomial));
+        btn_ln_mult.addActionListener(_ignored -> notify_listeners(InputType.LinealMultiple));
 
         // Agregar los botones al panel
         panel.add(btn_lineal);

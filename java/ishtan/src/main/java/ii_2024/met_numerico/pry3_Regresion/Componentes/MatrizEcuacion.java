@@ -10,7 +10,6 @@ import java.text.NumberFormat;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 
 import ii_2024.met_numerico.pry3_Regresion.Ecuacion;
 import ii_2024.met_numerico.pry3_Regresion.InputType;
@@ -351,16 +350,6 @@ public class MatrizEcuacion {
                 Ecuacion.of(new Double[] { x1, xx1, x1x2 }, x1y),
                 Ecuacion.of(new Double[] { x2, x1x2, xx2 }, x2y)
         });
-    }
-
-    private void cargar_tabla_lineal(double[] data) {
-        // Descomponen los datos
-        int n = (int) data[0];
-        double x = data[1], y = data[2], square_x = data[3], xy = data[4];
-        DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("x");
-        model.addColumn("y");
-
     }
 
     public enum MatrizType {

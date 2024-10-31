@@ -97,7 +97,7 @@ public class TableInput {
 
     public TableInput(SelectorRegression selector) {
         this.selector = selector;
-        selector.addActionListener(_ -> on_selector_change());
+        selector.addActionListener(_ignored -> on_selector_change());
         on_selector_change(); // Correr una vez para inicializar los totales
     }
 
@@ -108,7 +108,7 @@ public class TableInput {
     public JPanel as_JPanel() {
         JScrollPane scroll_pane = new JScrollPane(this.table);
         scroll_pane.setMaximumSize(new Dimension(350, 175));
-        this.selector.addActionListener(_ -> notify_model_listeners());
+        this.selector.addActionListener(_ignored -> notify_model_listeners());
         this.table.getModel().addTableModelListener((_ingored) -> {
             // Actualizar totales cuando el modelo de la tabla cambie
             tally_totals();
@@ -140,7 +140,7 @@ public class TableInput {
                 popped[i] = model.getValueAt(model.getRowCount() - 1, i);
             model.removeRow(model.getRowCount() - 1);
         });
-        blankize_table.addActionListener( e -> {
+        blankize_table.addActionListener(e -> {
             DefaultTableModel model = (DefaultTableModel) this.table.getModel();
             for (int i = 0; i < model.getRowCount(); i++) {
                 for (int j = 0; j < model.getColumnCount(); j++) {
@@ -162,28 +162,23 @@ public class TableInput {
 
         // Añadir elementos al panel de totales
         var border = BorderFactory.createTitledBorder("Estadísticas");
-        var square_border = BorderFactory.createLineBorder(Color.BLACK, 1);
         totales.setBorder(border);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(0, 10, 0, 10);
-        // this.total_y.setBorder(square_border);
         totales.add(this.total_y, gbc);
 
         gbc.gridx = 1;
-        // this.total_x.setBorder(square_border);
         totales.add(this.total_x, gbc);
 
         gbc.gridx = 2;
-        // this.total_x2.setBorder(square_border);
         totales.add(this.total_x2, gbc);
 
         gbc.gridx = 0;
         gbc.gridwidth = 3;
         gbc.gridy = 1;
-        // this.median_y.setBorder(square_border);
         totales.add(this.median_y, gbc);
         totales.setMaximumSize(scroll_pane.getMaximumSize());
         // Fin de la región de totales
