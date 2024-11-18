@@ -61,10 +61,10 @@ public final class Pry4 {
         final JTable table = gui.getTable();
         final JTextArea result_area = gui.getResult_area();
 
-        // Add action listener to calculate button
+        // Agregar evento al botón de calcular
         calculate_button.addActionListener(e -> {
             System.out.println("Button clicked!");
-            // Get values from fields
+            // Leer valores de los componentes
             final String function = input_function_field.getText();
             final double lower_limit = ((Number) lower_limit_field.getValue()).doubleValue();
             final double upper_limit = ((Number) upper_limit_field.getValue()).doubleValue();
@@ -105,7 +105,7 @@ public final class Pry4 {
                 }
             }
             if (error_msg.length() > 0) {
-                // remove last newline
+                // Limpiar último salto de línea
                 error_msg.deleteCharAt(error_msg.length() - 1);
                 result_area.setText("Hubo errores en los datos ingresados:\n" + error_msg.toString());
                 gui.getFrame().pack();
@@ -155,7 +155,7 @@ public final class Pry4 {
             final int truncated = (int) result;
             final int digits = (int) Math.log10(Math.abs(truncated)) + 1;
             formatter.setMaximumFractionDigits(15 - digits);
-            result_msg.append(formatter.format(result));
+            result_msg.append(formatter.format(result)); // Agregar área estimada al mensaje
 
             result_area.setText(result_msg.toString());
         });

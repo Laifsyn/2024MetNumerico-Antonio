@@ -70,9 +70,7 @@ class Estrategia(Enum):
     def trapecio(
         self, data: List[Tuple[int, float, float]], h: Optional[float] = None
     ) -> float:
-        N = DataArgument.N.value
-        X = DataArgument.X.value
-        Y = DataArgument.F_x.value
+        X, Y = DataArgument.X.value, DataArgument.F_x.value
         if h is None:
             h = data[1][X] - data[0][X]
         n = len(data)
@@ -87,16 +85,13 @@ class Estrategia(Enum):
     def simpson_13(
         self, data: List[Tuple[int, float, float]], h: Optional[float] = None
     ) -> float:
-        N = DataArgument.N.value
-        X = DataArgument.X.value
-        Y = DataArgument.F_x.value
-
+        X, Y = DataArgument.X.value, DataArgument.F_x.value
         if h is None:
             h = data[1][X] - data[0][X]
 
         n = len(data)
         assert n > 4, "No hay suficientes datos para integrar"
-        assert (n-1) % 2 == 0, f"La cantidad de segmentos debe ser par (n+1={n})"
+        assert (n - 1) % 2 == 0, f"La cantidad de segmentos debe ser par (n+1={n})"
 
         suma_impar = 0.0
         suma_par = 0.0
@@ -113,9 +108,7 @@ class Estrategia(Enum):
     def simpson_38(
         self, data: List[Tuple[int, float, float]], h: Optional[float] = None
     ) -> float:
-        N = DataArgument.N.value
-        X = DataArgument.X.value
-        Y = DataArgument.F_x.value
+        X, Y = DataArgument.X.value, DataArgument.F_x.value
 
         if h is None:
             h = data[1][X] - data[0][X]
@@ -159,7 +152,7 @@ class IntegrationBuilder:
 
 class IntegrationStrategy:
     def __init__(self, builder: IntegrationBuilder):
-        # Definir conversión debido a falta de un defecto
+        # Llenar valores que no están definidos
         if builder.limites is None:
             builder.limites = (0, 1)
         if builder.segmentos is None:
@@ -345,5 +338,6 @@ def main():
                 print("Opción inválida")
                 continue
     print("Programa finalizado")
+
 
 main()
