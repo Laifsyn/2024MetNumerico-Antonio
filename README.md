@@ -53,7 +53,7 @@ La estrategia de reordenamiento es exactamente el mismo (conceptualmente), solo 
 
 Se hizo uso de [ratatui.rs](https://github.com/ratatui/ratatui) y su [guía quickstart](https://github.com/ratatui/ratatui?tab=readme-ov-file#quickstart) para implementar una visualización de reordenamiento por inserción.
 
-![Inserción Directa con búsqueda Binaria](resumen\estructura_datos\insercion_directa_binaria.png)
+![Insercion Directa con busqueda Binaria](resumen\estructura_datos\insercion_directa_binaria.png)
 
 
 # Matsup
