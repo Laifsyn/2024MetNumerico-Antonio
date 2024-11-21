@@ -35,16 +35,16 @@ Un algoritmo visualizado con Manim. Busca la rutas más cortas desde un nodo ini
 
 Se hizo uso de una escena 3D solo por capricho personal. Pero no es necesario para la demostración del algoritmo.
 
-![Dijkstra - Graph resolution video](python\estructura_datos\Manim_Dijkstra%20Final.mp4)
+![Dijkstra - Graph resolution video](python/estructura_datos/Manim_Dijkstra%20Final.mp4)
 
-![Dijkstra - Image of video](python\estructura_datos\image_dijkstra.png)
+![Dijkstra - Image of video](python/estructura_datos/image_dijkstra.png)
 
 ## Inserción Directa
 ***Inserción Directa con búsqueda Simple usando Manim***. 
 
 La lógica de reordenamiento y comparación fue incrustada dentro del código de animación.
 
-![Inserción Directa con búsqueda Simple](resumen\estructura_datos\insercion_directa_simple.png)
+![Inserción Directa con búsqueda Simple](resumen/estructura_datos/insercion_directa_simple.png)
 
 
 ***Inserción Directa con búsqueda binaria***. 
@@ -53,7 +53,7 @@ La estrategia de reordenamiento es exactamente el mismo (conceptualmente), solo 
 
 Se hizo uso de [ratatui.rs](https://github.com/ratatui/ratatui) y su [guía quickstart](https://github.com/ratatui/ratatui?tab=readme-ov-file#quickstart) para implementar una visualización de reordenamiento por inserción.
 
-![Insercion Directa con busqueda Binaria](resumen\estructura_datos\insercion_directa_binaria.png)
+![Insercion Directa con busqueda Binaria](resumen/estructura_datos/insercion_directa_binaria.png)
 
 
 # Matsup
