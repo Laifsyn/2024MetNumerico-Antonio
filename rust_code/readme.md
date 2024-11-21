@@ -1,0 +1,1 @@
+This folder is meant to just fast and dirty store this somewhere. I wasn't originally planning to store rust codes here due to them needing to also have a matching `cargo.toml` to load dependencies and binary-related configurations, so any dependency will have to be manually added.

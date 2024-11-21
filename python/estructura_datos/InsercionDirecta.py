@@ -15,17 +15,10 @@ class NodeState:
 class InsercionDirecta(MovingCameraScene):
     def __init__(self):
         super().__init__()
-        self.to_sort_vec = [18, 10, 4, 0, 20, 16, 2, 14, 6, 8, 12]
-        self.to_sort_vec = [10, 17, 0, 2, 20, 6, 12]
-        # self.to_sort_vec = [i * 2 for i in range(8)]
-        # random.shuffle(self.to_sort_vec)
-        # self.to_sort_vec.pop(3)
-        # self.to_sort_vec.pop(3)
-        # self.to_sort_vec.pop(3)
-        # self.to_sort_vec = [i for i in range(12)]
+        self.to_sort_vec = [2, 17, 0, 12, 20, 10, 6]
         random.shuffle(self.to_sort_vec)
-        random.shuffle(self.to_sort_vec)
-        config.frame_rate = 24
+        print(self.to_sort_vec)
+        config.frame_rate = 60
 
     def construct(self):
         __question = self.draw_question__()
@@ -38,7 +31,6 @@ class InsercionDirecta(MovingCameraScene):
         g_indexes = self.indexes
         steps_list: List[Tex] = []
 
-        # Inserción directa
         data = [x for x in self.to_sort_vec]
         data_len = len(data)
         instrucciones = VGroup(
@@ -63,29 +55,36 @@ class InsercionDirecta(MovingCameraScene):
         arrow: Arrow = Arrow(UP, DOWN)
         arrow_label: Tex = Tex("Puntero").next_to(arrow, UP)
         arrow_and_label = VGroup(arrow, arrow_label)
-        for partition_tail in range(1, data_len):
-            puntero = partition_tail
-            step = Tex(str(partition_tail))
+        for cola_de_particion in range(1, data_len):
+            puntero = cola_de_particion
+            step = Tex(str(cola_de_particion))
             step.align_to(self.camera.frame.get_corner(UP + LEFT), UP + LEFT)
             vgroup_steps: VGroup | None = None
             self.add(step)
-            # Colorear el elemento de comparación.
+            # Resaltar/Colorear el elemento de comparación.
             focus_mobject = g_value[puntero]
             focus_mobject.set_color(PINK)
             triggered_flag: List[Animation] | None = (
                 None  # A flag that represents that a set of data suffers no changes (to color objects which value are below the value[pointer])
             )
             ## Dibujar Flecha de Puntero
-            steps_list.append(Tex(f"Pasada \\#{partition_tail}").scale(0.7))
-            self.play(Write(arrow_and_label.next_to(g_indexes[puntero], UP)))
-            for i in reversed(range(0, partition_tail)):
+            steps_list.append(Tex(f"Pasada \\#{cola_de_particion}").scale(0.7))
+            self.add(g_focused[0])
+            self.remove(arrow_and_label)
+            self.play(
+                LaggedStart(
+                    Create(arrow_and_label.next_to(g_indexes[puntero], UP)),
+                    Write(g_focused[cola_de_particion]),
+                    lag_ratio=0.4,
+                )
+            )
+            for i in reversed(range(0, cola_de_particion)):
                 step.become(
                     Tex(
-                        f"Pasada \\#{partition_tail}, Comparaciones$_i$: {i}/{partition_tail-1}"
+                        f"Pasada \\#{cola_de_particion}, Comparaciones$_i$: {i}/{cola_de_particion-1}"
                     ).align_to(step, LEFT + UP)
                 )
 
-                self.add(g_focused[0 : partition_tail + 1])
                 a = Tex(f"{data[i]}").set_color(g_value[i].get_color())
                 b = Tex(f"{data[puntero]}", " $<$ ")
                 b[0].set_color(PINK)
@@ -96,12 +95,7 @@ class InsercionDirecta(MovingCameraScene):
                     comparison[1].animate.become(a),
                     run_time=0.5,
                 )
-                # print(
-                #     "Step: ",
-                #     partition_tail,
-                #     i,
-                #     f"({data[puntero]} < {data[i]}) [{partition_tail-1 }]",
-                # )
+
                 if triggered_flag is None and i != 0 and data[puntero] >= data[i]:
                     triggered_flag = [
                         AnimationGroup(
@@ -153,11 +147,12 @@ class InsercionDirecta(MovingCameraScene):
                 self.add(vgroup_steps)
                 # endregion: Mostrar lista de pasos
 
+                # **************************************************************************************************
+                # TODO:Región que realiza la comparación lógica
+                # **************************************************************************************************
                 if data[puntero] < data[i]:
-                    # print("Before: ", data)
-                    # b,a <- a,b # Right to left
                     (data[puntero], data[i]) = (data[i], data[puntero])
-                    # print(" after: ", data, "\n")
+                    
                     a = g_value[i]
                     b = g_value[puntero]
                     swapped_a = a.copy().move_to(b.get_center())
@@ -169,6 +164,7 @@ class InsercionDirecta(MovingCameraScene):
                             arrow_and_label.animate.next_to(g_indexes[i], UP),
                         )
                     )
+                    
                     g_value[i] = b
                     g_value[puntero] = a
                     puntero = i  # update pointer
@@ -184,7 +180,7 @@ class InsercionDirecta(MovingCameraScene):
             [val.set_color(WHITE) for val in g_value]
             self.wait(0.5)
             self.remove(step)
-            if (partition_tail - 1) % 3 == 0 or len(steps_list) > 8:
+            if (cola_de_particion - 1) % 3 == 0 or len(steps_list) > 8:
                 steps_list.clear()
                 self.remove(vgroup_steps)
             vgroup_steps = None
