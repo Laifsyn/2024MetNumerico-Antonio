@@ -15,7 +15,7 @@ class NodeState:
 class InsercionDirecta(MovingCameraScene):
     def __init__(self):
         super().__init__()
-        self.to_sort_vec = [2, 17, 0, 12, 20, 10, 6]
+        self.to_sort_vec = [1, 20, 19, 23, 12, 7, 11, 5]
         random.shuffle(self.to_sort_vec)
         print(self.to_sort_vec)
         config.frame_rate = 60
@@ -76,7 +76,8 @@ class InsercionDirecta(MovingCameraScene):
                     Create(arrow_and_label.next_to(g_indexes[puntero], UP)),
                     Write(g_focused[cola_de_particion]),
                     lag_ratio=0.4,
-                )
+                ),
+                run_time=0.65,
             )
             for i in reversed(range(0, cola_de_particion)):
                 step.become(
@@ -90,12 +91,16 @@ class InsercionDirecta(MovingCameraScene):
                 b[0].set_color(PINK)
                 comparison = VGroup(b, a).arrange(RIGHT).next_to(g_highlight, DOWN)
                 comparison[1] = g_value[i].copy()
+                if a.get_color() == BLACK:
+                    # Weird edge case where the Mobject is actually black only for the first instance
+                    a.set_color(WHITE)
+                delay = 0.25 if ((puntero - i) > 1) else 0.75
                 self.add(comparison[0])
                 self.play(
-                    comparison[1].animate.become(a),
-                    run_time=0.5,
+                    ClockwiseTransform(comparison[1], a, path_arc=PI/10),
+                    run_time=delay,
                 )
-
+                del delay  # restrict the lifetime of this variable
                 if triggered_flag is None and i != 0 and data[puntero] >= data[i]:
                     triggered_flag = [
                         AnimationGroup(
@@ -152,7 +157,7 @@ class InsercionDirecta(MovingCameraScene):
                 # **************************************************************************************************
                 if data[puntero] < data[i]:
                     (data[puntero], data[i]) = (data[i], data[puntero])
-                    
+
                     a = g_value[i]
                     b = g_value[puntero]
                     swapped_a = a.copy().move_to(b.get_center())
@@ -162,9 +167,9 @@ class InsercionDirecta(MovingCameraScene):
                             ClockwiseTransform(a, swapped_a, path_arc=PI / 2),
                             ClockwiseTransform(b, swapped_b, path_arc=PI),
                             arrow_and_label.animate.next_to(g_indexes[i], UP),
-                        )
+                        ),
+                        run_time=0.8,
                     )
-                    
                     g_value[i] = b
                     g_value[puntero] = a
                     puntero = i  # update pointer
@@ -241,15 +246,17 @@ class InsercionDirecta(MovingCameraScene):
         ]
         self.play(
             LaggedStart(
-                [
-                    AnimationGroup(Write(a), EmptyAnim(), Write(c))
-                    for (a, _, c) in zip(cell_highligther, indexes, cell_value)
-                ],
-                Write(indexes),
-                lag_ratio=0.4,
-                run_time=3.0,
+                LaggedStart(
+                    [
+                        LaggedStart(Write(a), Write(c), lag_ratio=0.5)
+                        for (a, c) in zip(cell_highligther, cell_value)
+                    ],
+                    lag_ratio=0.4,
+                ),
+                LaggedStart([Write(index) for index in indexes], lag_ratio=0.4),
+                lag_ratio=0.3,
             ),
-            # run_time=3,
+            run_time=3,
         )
         self.indexes = indexes
         self.highligther_cell = cell_highligther
